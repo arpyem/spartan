@@ -14,6 +14,11 @@ export interface Rank {
   xpRequired: number;
 }
 
+export interface DoubleXPStatus {
+  active: boolean;
+  upcoming: boolean;
+}
+
 export interface UserDoc {
   displayName: string;
   email: string;
@@ -45,3 +50,35 @@ export interface TourAdvanceEvent {
   nextTour: TourLevel;
 }
 
+export interface LogWorkoutInput {
+  uid: string;
+  track: TrackKey;
+  value: number;
+  note?: string | null;
+  currentTrack: TrackProgress;
+  now?: Date;
+}
+
+export interface LogWorkoutResult {
+  workoutId: string;
+  xpEarned: number;
+  doubleXP: boolean;
+  xpBefore: number;
+  xpAfter: number;
+  tourBefore: TourLevel;
+  tourAfter: TourLevel;
+  tourAdvanceAvailable: boolean;
+}
+
+export interface AdvanceTourInput {
+  uid: string;
+  track: TrackKey;
+  currentTrack: TrackProgress;
+}
+
+export interface AdvanceTourResult {
+  previousTour: TourLevel;
+  nextTour: TourLevel;
+  xpBefore: number;
+  xpAfter: 0;
+}
