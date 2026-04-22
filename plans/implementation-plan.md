@@ -74,6 +74,11 @@ Harden tests, mobile behavior, accessibility, offline/PWA behavior, and release 
 
 Focused plan: [05-quality-pwa-and-release.md](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md)
 
+### 6. Setup Review Remediation
+Address post-review gaps in bootstrap resilience and celebration correctness without changing the product scope or Firestore schema. This follow-up plan hardens first-sign-in recovery, keeps rank-up visuals Tour-accurate, and closes the review-driven test/documentation loop.
+
+Focused plan: [06-setup-review-remediation.md](/C:/Users/rpmmi/Documents/spartan/plans/06-setup-review-remediation.md)
+
 ## Milestone Exit Criteria
 ### Foundation And Tooling
 - Routing, app shell, theming, env keys, and Firebase initialization boundaries are in place.
@@ -122,3 +127,4 @@ Focused plan: [05-quality-pwa-and-release.md](/C:/Users/rpmmi/Documents/spartan/
 3. [Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md)
 4. [Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md)
 5. [Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md)
+6. [Setup Review Remediation](/C:/Users/rpmmi/Documents/spartan/plans/06-setup-review-remediation.md)
