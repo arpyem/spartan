@@ -73,6 +73,7 @@ let pendingRedirectResult: RedirectResult | null = null;
 let redirectResultError: Error | null = null;
 let signInWithRedirectError: Error | null = null;
 let signOutError: Error | null = null;
+let batchCommitError: Error | null = null;
 const authActionCalls = {
   getRedirectResult: 0,
   signInWithRedirect: 0,
@@ -263,6 +264,10 @@ export function setAuthActionError(
   signOutError = error;
 }
 
+export function setBatchCommitError(error: Error | null) {
+  batchCommitError = error;
+}
+
 export function getAuthActionCalls() {
   return { ...authActionCalls };
 }
@@ -394,6 +399,10 @@ export function writeBatchMock(_db: typeof db) {
       operations.push({ type: 'update', ref, data });
     },
     async commit() {
+      if (batchCommitError) {
+        throw batchCommitError;
+      }
+
       committedBatches.push(
         operations.map((operation) => ({
           ...operation,
@@ -530,6 +539,7 @@ export function resetFirebaseMocks() {
   redirectResultError = null;
   signInWithRedirectError = null;
   signOutError = null;
+  batchCommitError = null;
   authActionCalls.getRedirectResult = 0;
   authActionCalls.signInWithRedirect = 0;
   authActionCalls.signOut = 0;

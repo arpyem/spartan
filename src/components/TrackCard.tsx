@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import type { TrackMeta } from '@/lib/tracks';
 import type { TourLevel } from '@/lib/types';
 import { RankEmblem } from '@/components/RankEmblem';
@@ -11,6 +12,7 @@ interface TrackCardProps {
   progress: number;
   xp: number;
   onSelect: () => void;
+  doubleXPActive?: boolean;
   tourAdvanceAvailable?: boolean;
 }
 
@@ -22,6 +24,7 @@ export function TrackCard({
   progress,
   xp,
   onSelect,
+  doubleXPActive = false,
   tourAdvanceAvailable = false,
 }: TrackCardProps) {
   return (
@@ -50,11 +53,26 @@ export function TrackCard({
         <RankEmblem rankId={rankId} tour={tour} size={58} />
       </div>
       <div className="mt-4 space-y-3">
-        <XPBar progress={progress} label={`${xp} total EXP`} />
+        <XPBar
+          progress={progress}
+          doubleXPActive={doubleXPActive}
+          label={`${xp} total EXP`}
+        />
         {tourAdvanceAvailable ? (
-          <div className="rounded-2xl border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-3 py-2 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-amber)]">
+          <motion.div
+            className="rounded-2xl border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-3 py-2 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-amber)]"
+            animate={{
+              boxShadow: [
+                '0 0 0 rgba(245,166,35,0)',
+                '0 0 18px rgba(245,166,35,0.28)',
+                '0 0 0 rgba(245,166,35,0)',
+              ],
+              opacity: [0.84, 1, 0.84],
+            }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          >
             Tour advancement available
-          </div>
+          </motion.div>
         ) : null}
       </div>
     </button>

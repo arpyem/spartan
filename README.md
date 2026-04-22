@@ -6,8 +6,9 @@ Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across 
 - Plan 01 is complete: the repo now has a working React/Vite/Tailwind/Firebase foundation, route shell, test harness, and PWA baseline.
 - Plan 02 is complete: rank math, XP rules, deterministic Double XP state, Firestore write contracts, auth bootstrap helpers, and real-time hook boundaries are now implemented and tested.
 - Plan 03 is complete: Google redirect auth, live home and log screens, real-time workout aggregates, info modal data, and rank-up/Tour prompt plumbing are now implemented and tested.
-- Plans 04-05 remain ahead: Halo-quality emblem fidelity, celebration polish, mobile QA hardening, and release readiness are still pending.
-- The current app is now a usable end-to-end product loop. The remaining work is primarily fidelity, ceremony weight, and release hardening rather than missing core flows.
+- Plan 04 is complete: the app now has production-facing emblem/shield compositions, weighted XP bar treatment, a dedicated Tour confirmation prompt, and distinct rank-up/Tour celebration ceremonies.
+- Plan 05 remains ahead: mobile QA hardening, PWA release validation, and final release readiness are still pending.
+- The current app now includes the full progression ceremony loop. The remaining work is primarily release hardening, narrow-viewport validation, and deployment readiness.
 
 ## Repo Structure
 - `src/lib`
@@ -106,7 +107,7 @@ This table is the project-level status source for the implementation plans.
 | [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md) | App shell, routing, theme, env contract, Firebase surface, test/PWA baseline | Complete |
 | [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md) | Rank logic, XP economy, Firestore model, auth bootstrap, atomic write flows | Complete |
 | [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Complete |
-| [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Planned |
+| [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Complete |
 | [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, mobile QA, PWA completion, release readiness | Planned |
 
 Status meanings:

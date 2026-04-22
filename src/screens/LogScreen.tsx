@@ -3,16 +3,38 @@ import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
+import { TourAdvancePrompt } from '@/components/TourAdvancePrompt';
 import { TourModal } from '@/components/TourModal';
 import { XPBar } from '@/components/XPBar';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useDoubleXP } from '@/hooks/useDoubleXP';
 import { useUserData } from '@/hooks/useUserData';
 import { advanceTour, logWorkout } from '@/lib/firestore';
-import { getRankFromXP, getRankProgress } from '@/lib/ranks';
+import { getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
-import type { RankUpEvent, TourAdvanceEvent, TourLevel } from '@/lib/types';
+import type { RankUpEvent, TourAdvanceEvent, TourLevel, TrackKey } from '@/lib/types';
 import { calculateXP, getBaseXP } from '@/lib/xp';
+
+function formatTourLabel(tour: TourLevel) {
+  return `Tour ${tour}`;
+}
+
+function buildTourAdvanceEvent(trackKey: TrackKey, currentTour: TourLevel): TourAdvanceEvent {
+  const nextTour = (currentTour + 1) as TourLevel;
+
+  return {
+    track: trackKey,
+    trackLabel: TRACKS_BY_KEY[trackKey].label,
+    previousTour: currentTour,
+    previousTourLabel: formatTourLabel(currentTour),
+    nextTour,
+    nextTourLabel: formatTourLabel(nextTour),
+    previousRankId: RANKS[RANKS.length - 1].id,
+    previousRankName: RANKS[RANKS.length - 1].name,
+    nextRankId: RANKS[0].id,
+    nextRankName: RANKS[0].name,
+  };
+}
 
 export function LogScreen() {
   const { track } = useParams();
@@ -24,7 +46,8 @@ export function LogScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancingTour, setIsAdvancingTour] = useState(false);
   const [rankUpEvent, setRankUpEvent] = useState<RankUpEvent | null>(null);
-  const [tourEvent, setTourEvent] = useState<TourAdvanceEvent | null>(null);
+  const [pendingTourAdvance, setPendingTourAdvance] = useState<TourAdvanceEvent | null>(null);
+  const [tourCelebration, setTourCelebration] = useState<TourAdvanceEvent | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [tourError, setTourError] = useState<string | null>(null);
 
@@ -118,19 +141,18 @@ export function LogScreen() {
       if (previousRank.id !== nextRank.id) {
         setRankUpEvent({
           track: trackKey,
+          trackLabel: trackMeta.label,
           previousRankId: previousRank.id,
+          previousRankName: previousRank.name,
           nextRankId: nextRank.id,
+          nextRankName: nextRank.name,
           xpBefore: result.xpBefore,
           xpAfter: result.xpAfter,
         });
       }
 
       if (result.tourAdvanceAvailable) {
-        setTourEvent({
-          track: trackKey,
-          previousTour: result.tourBefore,
-          nextTour: (result.tourBefore + 1) as TourLevel,
-        });
+        setPendingTourAdvance(buildTourAdvanceEvent(trackKey, result.tourBefore));
       }
 
       setValue('');
@@ -147,16 +169,21 @@ export function LogScreen() {
   }
 
   async function handleAdvanceTour() {
+    if (!pendingTourAdvance) {
+      return;
+    }
+
     setTourError(null);
     setIsAdvancingTour(true);
 
     try {
-      await advanceTour({
+      const result = await advanceTour({
         uid: signedInUser.uid,
         track: trackKey,
         currentTrack: userDoc.tracks[trackKey],
       });
-      setTourEvent(null);
+      setPendingTourAdvance(null);
+      setTourCelebration(buildTourAdvanceEvent(trackKey, result.previousTour));
     } catch (nextError) {
       setTourError(
         nextError instanceof Error
@@ -290,16 +317,17 @@ export function LogScreen() {
       </section>
 
       <RankUpModal event={rankUpEvent} onClose={() => setRankUpEvent(null)} />
-      <TourModal
-        event={tourEvent}
+      <TourAdvancePrompt
+        event={pendingTourAdvance}
         isSubmitting={isAdvancingTour}
         error={tourError}
         onClose={() => {
-          setTourEvent(null);
+          setPendingTourAdvance(null);
           setTourError(null);
         }}
         onConfirm={handleAdvanceTour}
       />
+      <TourModal event={tourCelebration} onClose={() => setTourCelebration(null)} />
     </>
   );
 }

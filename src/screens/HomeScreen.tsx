@@ -99,6 +99,7 @@ export function HomeScreen() {
           rankId={globalRankId}
           rankName={globalRank.name}
           progress={globalProgress}
+          doubleXPActive={doubleXpStatus.active}
         />
 
         <div className="grid gap-3">
@@ -115,6 +116,7 @@ export function HomeScreen() {
                 tour={progress.tour}
                 progress={getRankProgress(progress.xp)}
                 xp={progress.xp}
+                doubleXPActive={doubleXpStatus.active}
                 tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
                 onSelect={() => navigate(`/log/${track.key}`)}
               />

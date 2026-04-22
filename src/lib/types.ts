@@ -50,16 +50,26 @@ export interface WorkoutDoc {
 
 export interface RankUpEvent {
   track: TrackKey;
+  trackLabel: string;
   previousRankId: number;
+  previousRankName: string;
   nextRankId: number;
+  nextRankName: string;
   xpBefore: number;
   xpAfter: number;
 }
 
 export interface TourAdvanceEvent {
   track: TrackKey;
+  trackLabel: string;
   previousTour: TourLevel;
+  previousTourLabel: string;
   nextTour: TourLevel;
+  nextTourLabel: string;
+  previousRankId: number;
+  previousRankName: string;
+  nextRankId: number;
+  nextRankName: string;
 }
 
 export interface LogWorkoutInput {

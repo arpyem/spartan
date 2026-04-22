@@ -21,6 +21,7 @@ import {
   resetFirebaseMocks,
   seedCollection,
   seedDoc,
+  setBatchCommitError,
   serverTimestampMock,
   setAuthBootstrapMode,
   setInitialAuthState,
@@ -223,12 +224,12 @@ describe('Plan 03 app flow', () => {
     expect(screen.getByText(/^1 EXP$/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Log It/i }));
 
-    expect(await screen.findByText(/Rank Up/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Apprentice$/i })).toBeInTheDocument();
+    expect(screen.getByText(/Cardio advanced from Recruit/i)).toBeInTheDocument();
     expect(getCommittedBatches()).toHaveLength(1);
   });
 
-  it('surfaces Tour advancement and applies the atomic Tour reset on confirm', async () => {
+  it('surfaces Tour advancement, confirms it, and then plays the ceremony', async () => {
     const userModel = seedSignedInState(createMockUser(), {
       cardio: { xp: 1999, tour: 1 },
     });
@@ -252,5 +253,35 @@ describe('Plan 03 app flow', () => {
         },
       });
     });
+
+    expect(await screen.findByText(/Tour Advanced/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Tour 2$/i })).toBeInTheDocument();
+    expect(screen.getByText(/Cardio reset to Recruit/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Recruit \| Tour 2/i)).toBeInTheDocument();
+    });
+  });
+
+  it('keeps the Tour confirmation prompt open when the advancement write fails', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1999, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    expect(await screen.findByText(/Advance Cardio/i)).toBeInTheDocument();
+    setBatchCommitError(new Error('Tour write failed.'));
+    await user.click(screen.getByRole('button', { name: /Advance Tour/i }));
+
+    expect(await screen.findByText(/Tour write failed/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Advance Tour/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Tour Advanced/i)).not.toBeInTheDocument();
   });
 });

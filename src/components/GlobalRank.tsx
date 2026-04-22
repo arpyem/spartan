@@ -5,12 +5,14 @@ interface GlobalRankProps {
   rankId: number;
   rankName: string;
   progress: number;
+  doubleXPActive?: boolean;
 }
 
 export function GlobalRank({
   rankId,
   rankName,
   progress,
+  doubleXPActive = false,
 }: GlobalRankProps) {
   return (
     <section className="panel glow-green rounded-[1.8rem] p-5">
@@ -27,7 +29,11 @@ export function GlobalRank({
         </div>
       </div>
       <div className="mt-5">
-        <XPBar progress={progress} label="Composite tier progress" />
+        <XPBar
+          progress={progress}
+          doubleXPActive={doubleXPActive}
+          label="Composite tier progress"
+        />
       </div>
     </section>
   );
