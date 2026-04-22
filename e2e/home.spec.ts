@@ -54,7 +54,7 @@ test('renders the home screen from seeded data and opens the info modal', async 
 
   await page.getByRole('button', { name: 'Open global rank info' }).click();
   await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeVisible();
-  await expect(page.getByText(/Composite standing is derived from the floor average/i)).toBeVisible();
+  await expect(page.getByText(/Global rank is the floor average of the five Spartan track rank indices/i)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeHidden();
 
@@ -66,4 +66,41 @@ test('renders the home screen from seeded data and opens the info modal', async 
 
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog', { name: 'Service Record' })).toBeHidden();
+});
+
+test('keeps recruit track cards centered and compact on the 390px mobile layout', async ({
+  page,
+}) => {
+  await gotoApp(
+    page,
+    '/',
+    createSignedInScenario({
+      userDoc: {
+        displayName: 'Master Chief',
+        email: 'chief@example.com',
+        photoURL: 'https://example.com/chief.png',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        tracks: {
+          cardio: { xp: 45, tour: 1 },
+          legs: { xp: 2000, tour: 1 },
+          push: { xp: 120, tour: 2 },
+          pull: { xp: 0, tour: 1 },
+          core: { xp: 30, tour: 1 },
+        },
+      },
+    }),
+  );
+
+  const pullCard = page.getByRole('button', {
+    name: /Pull, Recruit, 0 EXP, 2 EXP to next rank/i,
+  });
+
+  await pullCard.scrollIntoViewIfNeeded();
+  await expect(pullCard).toBeVisible();
+
+  const rankNameSize = await pullCard
+    .locator('p.font-display')
+    .evaluate((node) => Number.parseFloat(window.getComputedStyle(node).fontSize));
+  expect(rankNameSize).toBeLessThanOrEqual(13);
+  await expect(pullCard.locator('[data-testid="rank-emblem"]')).toBeVisible();
 });

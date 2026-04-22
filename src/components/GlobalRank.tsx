@@ -11,6 +11,22 @@ interface GlobalRankProps {
   doubleXPActive?: boolean;
 }
 
+function splitRankName(rankName: string) {
+  const match = rankName.match(/^(.*?)\s*\((.*?)\)$/);
+
+  if (!match) {
+    return {
+      primary: rankName,
+      secondary: null,
+    };
+  }
+
+  return {
+    primary: match[1],
+    secondary: match[2],
+  };
+}
+
 export function GlobalRank({
   displayName,
   rankId,
@@ -22,6 +38,7 @@ export function GlobalRank({
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const { primary, secondary } = splitRankName(rankName);
 
   useEffect(() => {
     if (!isInfoOpen) {
@@ -76,59 +93,66 @@ export function GlobalRank({
           Record
         </button>
       </div>
-      <div className="service-header flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div className="service-header">
+        <div className="flex items-center justify-between gap-4">
           <p className="service-label">Global rank</p>
-          <h2 className="font-display mt-2 text-[1.8rem] uppercase tracking-[0.08em] text-white sm:text-[2.3rem]">
-            {rankName}
-          </h2>
-        </div>
-        <div ref={popoverRef} className="relative shrink-0">
-          <button
-            ref={triggerRef}
-            type="button"
-            aria-label="Open global rank info"
-            aria-expanded={isInfoOpen}
-            aria-haspopup="dialog"
-            onClick={() => setIsInfoOpen((current) => !current)}
-            className="focus-shell service-icon-button"
-          >
-            i
-          </button>
-          {isInfoOpen ? (
-            <div
-              role="dialog"
-              aria-label="Global rank info"
-              className="service-popover"
+          <div ref={popoverRef} className="relative shrink-0">
+            <button
+              ref={triggerRef}
+              type="button"
+              aria-label="Open global rank info"
+              aria-expanded={isInfoOpen}
+              aria-haspopup="dialog"
+              onClick={() => setIsInfoOpen((current) => !current)}
+              className="focus-shell service-icon-button service-icon-button-compact"
             >
-              <div className="service-popover-section">
-                <p className="service-label">Global rank aggregate</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Global rank is the floor average of the five Spartan track rank
-                  indices.
-                </p>
+              i
+            </button>
+            {isInfoOpen ? (
+              <div
+                role="dialog"
+                aria-label="Global rank info"
+                className="service-popover"
+              >
+                <div className="service-popover-section">
+                  <p className="service-label">Global rank aggregate</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                    Global rank is the floor average of the five Spartan track rank
+                    indices.
+                  </p>
+                </div>
+                <div className="service-popover-section">
+                  <p className="service-label">Log workout</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                    Tap any track tile to log one session. Cardio uses minutes;
+                    strength tracks use sets.
+                  </p>
+                </div>
               </div>
-              <div className="service-popover-section">
-                <p className="service-label">Log workout</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Tap any track tile to log one session. Cardio uses minutes;
-                  strength tracks use sets.
-                </p>
-              </div>
-            </div>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-3 min-w-0 space-y-1">
+          <h2 className="font-display text-[1.7rem] uppercase leading-[0.98] tracking-[0.07em] text-white sm:text-[2.15rem] lg:text-[2.45rem]">
+            {primary}
+          </h2>
+          {secondary ? (
+            <p className="font-display text-[1rem] uppercase tracking-[0.12em] text-[var(--color-text-muted)] sm:text-[1.2rem]">
+              {secondary}
+            </p>
           ) : null}
         </div>
       </div>
-      <div className="mt-5 flex min-h-[18rem] flex-col justify-between gap-5 lg:min-h-[30rem]">
-        <div className="flex flex-1 items-center justify-center">
+      <div className="mt-4 flex min-h-[15rem] flex-col justify-between gap-4 lg:min-h-[24rem]">
+        <div className="service-global-rank-stage flex flex-1 items-center justify-center">
           <div className="lg:hidden">
-            <RankEmblem rankId={rankId} tour={1} size={138} />
+            <RankEmblem rankId={rankId} tour={1} size={128} />
           </div>
           <div className="hidden lg:block">
-            <RankEmblem rankId={rankId} tour={1} size={186} />
+            <RankEmblem rankId={rankId} tour={1} size={182} />
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 border-t border-[var(--color-divider)] pt-3">
           <XPBar
             progress={progress}
             doubleXPActive={doubleXPActive}

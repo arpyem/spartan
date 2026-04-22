@@ -187,7 +187,7 @@ export function HomeScreen() {
         <h1 className="sr-only">Service Record</h1>
         <HomeStatusRail items={homeStatusItems} />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] xl:items-stretch">
+        <div className="grid gap-4 xl:h-[42rem] xl:max-h-[calc(100vh-7.5rem)] xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] xl:items-stretch">
           <GlobalRank
             displayName={userDoc.displayName || 'Spartan'}
             rankId={globalRankId}
@@ -197,13 +197,13 @@ export function HomeScreen() {
             doubleXPActive={doubleXpStatus.active}
           />
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-6 lg:grid-rows-2">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-6 lg:grid-rows-2 xl:h-full">
             {TRACKS.map((track, index) => {
               const progress = userDoc.tracks[track.key];
               const rank = getRankFromXP(progress.xp);
 
               return (
-                <div key={track.key} className={trackTilePlacements[index]}>
+                <div key={track.key} className={`min-h-0 ${trackTilePlacements[index]}`}>
                   <TrackCard
                     track={track}
                     rankId={rank.id}

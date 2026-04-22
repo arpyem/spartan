@@ -36,25 +36,27 @@ export function TrackCard({
       aria-label={`${track.label}, ${rankName}, ${xp} EXP${
         xpToNextRank === null ? ', Max rank' : `, ${xpToNextRank} EXP to next rank`
       }`}
-      className="focus-shell service-row service-track-card service-selection-glow block h-full w-full cursor-pointer p-4 text-left"
+      className="focus-shell service-row service-track-card service-selection-glow block h-full w-full cursor-pointer px-3 py-3.5 text-left sm:px-3.5 sm:py-4"
       data-selected={tourAdvanceAvailable ? 'true' : 'false'}
     >
-      <div className="flex h-full flex-col justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <TrackBadge badgeKey={track.badgeKey} size={28} variant="glyph" />
-          <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
+      <div className="grid h-full grid-rows-[auto,1fr,auto] gap-2.5">
+        <div className="flex min-w-0 items-center justify-center gap-2.5 text-center">
+          <TrackBadge badgeKey={track.badgeKey} size={30} variant="glyph" />
+          <p className="text-[0.61rem] uppercase tracking-[0.18em] text-[rgba(214,225,244,0.66)]">
             {track.label}
           </p>
         </div>
-        <div className="service-track-card-stage flex flex-1 items-center justify-center">
-          <RankEmblem rankId={rankId} tour={tour} size={94} />
+        <div className="service-track-card-stage flex min-h-0 items-center">
+          <div className="mx-auto flex w-full max-w-[6.95rem] flex-1 items-center justify-center">
+            <RankEmblem rankId={rankId} tour={tour} size={82} />
+          </div>
         </div>
-        <div className="space-y-3">
-          <div className="space-y-1 text-center">
-            <p className="font-display text-[0.96rem] uppercase tracking-[0.08em] text-white sm:text-[1.08rem]">
+        <div className="mx-auto flex w-full max-w-[7rem] flex-col gap-2 text-center">
+          <div className="space-y-1.5">
+            <p className="font-display text-[0.6rem] uppercase leading-[1.18] tracking-[0.05em] text-[rgba(214,225,244,0.72)]">
               {rankName}
             </p>
-            <div className="flex items-center justify-between gap-3 text-[0.66rem] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+            <div className="flex items-center justify-between gap-3 text-[0.58rem] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
               <span>{xp} EXP</span>
               <span>{progress}%</span>
             </div>
