@@ -56,6 +56,12 @@ vi.mock('@/lib/firebase', () => ({
   auth,
   db,
   googleProvider,
+  getFirebaseServices: () => ({
+    firebaseApp,
+    auth,
+    db,
+    googleProvider,
+  }),
 }));
 
 vi.mock('firebase/auth', async () => {

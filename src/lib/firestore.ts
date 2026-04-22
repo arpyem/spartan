@@ -1,4 +1,3 @@
-import type { User } from 'firebase/auth';
 import {
   collection,
   doc,
@@ -9,10 +8,11 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { devLog, sanitizeErrorForDevLog, summarizeTrackProgressForDevLog } from '@/lib/dev-logging';
-import { db } from '@/lib/firebase';
+import { getFirebaseServices } from '@/lib/firebase';
 import type {
   AdvanceTourInput,
   AdvanceTourResult,
+  AppUser,
   LogWorkoutInput,
   LogWorkoutResult,
   TourLevel,
@@ -31,6 +31,7 @@ export function createInitialTracks(): TracksMap {
 }
 
 function getUserRef(uid: string) {
+  const { db } = getFirebaseServices();
   return doc(db, 'users', uid);
 }
 
@@ -38,7 +39,7 @@ function normalizeNote(note?: string | null) {
   return note?.trim() ?? '';
 }
 
-export async function ensureUserDoc(user: User): Promise<boolean> {
+export async function ensureUserDoc(user: AppUser): Promise<boolean> {
   const userRef = getUserRef(user.uid);
   const existingUser = await getDoc(userRef);
 
@@ -88,6 +89,7 @@ export async function logWorkout(
     timestamp: serverTimestamp(),
   };
 
+  const { db } = getFirebaseServices();
   const batch = writeBatch(db);
   batch.set(workoutRef, workoutDoc);
   batch.update(userRef, {
@@ -150,6 +152,7 @@ export async function advanceTour(
 
   const nextTour = toNextTour(input.currentTrack.tour);
   const userRef = getUserRef(input.uid);
+  const { db } = getFirebaseServices();
   const batch = writeBatch(db);
 
   batch.update(userRef, {

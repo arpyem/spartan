@@ -8,21 +8,13 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from 'firebase/auth';
-import {
-  getRedirectResult,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-} from 'firebase/auth';
 import {
   devLog,
   sanitizeErrorForDevLog,
   summarizeAuthUserForDevLog,
 } from '@/lib/dev-logging';
-import { auth, googleProvider } from '@/lib/firebase';
-import { ensureUserDoc } from '@/lib/firestore';
+import { getAppRuntime } from '@/lib/runtime';
+import type { AppUser } from '@/lib/types';
 
 type AuthSessionStatus = 'loading' | 'signed_out' | 'signed_in';
 type BusyAction = 'sign_in' | 'sign_out' | null;
@@ -30,7 +22,7 @@ export type BootstrapStatus = 'idle' | 'running' | 'ready' | 'error';
 
 interface AuthSessionContextValue {
   status: AuthSessionStatus;
-  user: User | null;
+  user: AppUser | null;
   error: string | null;
   busyAction: BusyAction;
   bootstrapStatus: BootstrapStatus;
@@ -52,13 +44,15 @@ function normalizeError(error: unknown): string {
 }
 
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
+  const appRuntime = getAppRuntime();
   const [status, setStatus] = useState<AuthSessionStatus>('loading');
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<BusyAction>(null);
   const [bootstrapStatus, setBootstrapStatus] = useState<BootstrapStatus>('idle');
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const mountedRef = useRef(true);
+  const authUserRef = useRef<AppUser | null>(null);
   const bootstrappedUidRef = useRef<string | null>(null);
   const bootstrapUidRef = useRef<string | null>(null);
   const bootstrapPromiseRef = useRef<Promise<void> | null>(null);
@@ -72,7 +66,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const bootstrapUser = useCallback(
-    async (nextUser: User, options?: { force?: boolean }) => {
+    async (nextUser: AppUser, options?: { force?: boolean }) => {
       const force = options?.force ?? false;
 
       if (!force && bootstrappedUidRef.current === nextUser.uid) {
@@ -107,9 +101,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         setBootstrapError(null);
       }
 
-      const promise = ensureUserDoc(nextUser)
+      const promise = appRuntime.ensureUserDoc(nextUser)
         .then(() => {
-          if (!mountedRef.current || auth.currentUser?.uid !== nextUser.uid) {
+          if (!mountedRef.current || authUserRef.current?.uid !== nextUser.uid) {
             return;
           }
 
@@ -122,7 +116,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
           setBootstrapError(null);
         })
         .catch((nextError) => {
-          if (!mountedRef.current || auth.currentUser?.uid !== nextUser.uid) {
+          if (!mountedRef.current || authUserRef.current?.uid !== nextUser.uid) {
             return;
           }
 
@@ -150,21 +144,21 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
       return promise;
     },
-    [],
+    [appRuntime],
   );
 
   useEffect(() => {
     mountedRef.current = true;
     devLog.info('auth', 'redirect_result_started');
 
-    void getRedirectResult(auth)
+    void appRuntime.getRedirectResult()
       .then(async (result) => {
         devLog.info('auth', 'redirect_result_succeeded', {
-          hasUser: Boolean(result?.user),
-          user: summarizeAuthUserForDevLog(result?.user ?? null),
+          hasUser: Boolean(result),
+          user: summarizeAuthUserForDevLog(result),
         });
-        if (result?.user && mountedRef.current) {
-          await bootstrapUser(result.user);
+        if (result && mountedRef.current) {
+          await bootstrapUser(result);
         }
       })
       .catch((nextError) => {
@@ -176,7 +170,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         }
       });
 
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+    const unsubscribe = appRuntime.onAuthStateChanged((nextUser) => {
       if (!mountedRef.current) {
         return;
       }
@@ -185,6 +179,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         status: nextUser ? 'signed_in' : 'signed_out',
         user: summarizeAuthUserForDevLog(nextUser),
       });
+      authUserRef.current = nextUser;
       setUser(nextUser);
       setStatus(nextUser ? 'signed_in' : 'signed_out');
 
@@ -207,7 +202,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       mountedRef.current = false;
       unsubscribe();
     };
-  }, [bootstrapUser, resetBootstrapState]);
+  }, [appRuntime, bootstrapUser, resetBootstrapState]);
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({
@@ -223,14 +218,12 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         devLog.info('auth', 'sign_in_requested');
 
         try {
-          if (import.meta.env.DEV) {
-            const result = await signInWithPopup(auth, googleProvider);
+          const result = await appRuntime.signInWithGoogle();
+          if (result) {
             devLog.info('auth', 'sign_in_popup_succeeded', {
-              user: summarizeAuthUserForDevLog(result.user),
+              user: summarizeAuthUserForDevLog(result),
             });
-            await bootstrapUser(result.user);
-          } else {
-            await signInWithRedirect(auth, googleProvider);
+            await bootstrapUser(result);
           }
         } catch (nextError) {
           devLog.error('auth', 'sign_in_failed', {
@@ -248,7 +241,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         });
 
         try {
-          await signOut(auth);
+          await appRuntime.signOut();
           devLog.info('auth', 'sign_out_succeeded', {
             user: summarizeAuthUserForDevLog(user),
           });
@@ -276,7 +269,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         setError(null);
       },
     }),
-    [bootstrapError, bootstrapStatus, bootstrapUser, busyAction, error, status, user],
+    [appRuntime, bootstrapError, bootstrapStatus, bootstrapUser, busyAction, error, status, user],
   );
 
   return (

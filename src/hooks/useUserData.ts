@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
 import {
   devLog,
   sanitizeErrorForDevLog,
   summarizeTrackProgressForDevLog,
 } from '@/lib/dev-logging';
-import { db } from '@/lib/firebase';
+import { getAppRuntime } from '@/lib/runtime';
 import type { UserDoc } from '@/lib/types';
 
 export type UserDataStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -17,6 +16,7 @@ export interface UseUserDataResult {
 }
 
 export function useUserData(uid?: string | null): UseUserDataResult {
+  const appRuntime = getAppRuntime();
   const [state, setState] = useState<UseUserDataResult>({
     status: uid ? 'loading' : 'idle',
     userDoc: null,
@@ -42,14 +42,13 @@ export function useUserData(uid?: string | null): UseUserDataResult {
     devLog.info('snapshot', 'user_doc_subscribed', {
       uidSuffix: uid.slice(-6),
     });
-    const userRef = doc(db, 'users', uid);
-    const unsubscribe = onSnapshot(
-      userRef,
+    const unsubscribe = appRuntime.subscribeUserDoc(
+      uid,
       (snapshot) => {
-        const nextUserDoc = snapshot.exists() ? (snapshot.data() as UserDoc) : null;
+        const nextUserDoc = snapshot as UserDoc | null;
         devLog.debug('snapshot', 'user_doc_snapshot_received', {
           uidSuffix: uid.slice(-6),
-          exists: snapshot.exists(),
+          exists: Boolean(nextUserDoc),
           tracks: nextUserDoc
             ? Object.fromEntries(
                 Object.entries(nextUserDoc.tracks).map(([trackKey, progress]) => [
@@ -84,7 +83,7 @@ export function useUserData(uid?: string | null): UseUserDataResult {
       });
       unsubscribe();
     };
-  }, [uid]);
+  }, [appRuntime, uid]);
 
   return state;
 }

@@ -43,6 +43,13 @@ export interface Rank {
   xpRequired: number;
 }
 
+export interface AppUser {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+}
+
 export interface DoubleXPStatus {
   active: boolean;
   upcoming: boolean;

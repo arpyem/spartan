@@ -1,5 +1,5 @@
-import type { User } from 'firebase/auth';
 import type {
+  AppUser,
   DevLogCategory,
   DevLogEntry,
   DevLogLevel,
@@ -192,7 +192,7 @@ export function sanitizeDevLogData(data: unknown, key?: string): DevLogValue | n
   return String(data);
 }
 
-export function summarizeAuthUserForDevLog(user: User | null | undefined): DevLogValue {
+export function summarizeAuthUserForDevLog(user: AppUser | null | undefined): DevLogValue {
   if (!user) {
     return {
       signedIn: false,

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
 import {
   devLog,
   sanitizeErrorForDevLog,
   summarizeWorkoutStatsForDevLog,
 } from '@/lib/dev-logging';
-import { db } from '@/lib/firebase';
+import { getAppRuntime } from '@/lib/runtime';
 import type {
   TrackKey,
   WorkoutDoc,
@@ -54,6 +53,7 @@ function buildWorkoutStats(workouts: WorkoutDoc[]): WorkoutStats {
 }
 
 export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
+  const appRuntime = getAppRuntime();
   const [state, setState] = useState<UseWorkoutStatsResult>({
     status: uid ? 'loading' : 'idle',
     stats: createEmptyWorkoutStats(),
@@ -79,17 +79,13 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
     devLog.info('snapshot', 'workout_stats_subscribed', {
       uidSuffix: uid.slice(-6),
     });
-    const workoutsRef = collection(doc(db, 'users', uid), 'workouts');
-    const unsubscribe = onSnapshot(
-      workoutsRef,
-      (snapshot) => {
-        const workouts = snapshot.docs.map(
-          (workoutDoc) => workoutDoc.data() as WorkoutDoc,
-        );
+    const unsubscribe = appRuntime.subscribeWorkouts(
+      uid,
+      (workouts) => {
         const nextStats = buildWorkoutStats(workouts);
         devLog.debug('snapshot', 'workout_stats_snapshot_received', {
           uidSuffix: uid.slice(-6),
-          workouts: snapshot.docs.length,
+          workouts: workouts.length,
           summary: summarizeWorkoutStatsForDevLog(nextStats),
         });
 
@@ -118,7 +114,7 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
       });
       unsubscribe();
     };
-  }, [uid]);
+  }, [appRuntime, uid]);
 
   return state;
 }

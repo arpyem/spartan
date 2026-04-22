@@ -12,8 +12,8 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
 import { StatusBanner } from '@/components/StatusBanner';
 import { devLog, sanitizeErrorForDevLog } from '@/lib/dev-logging';
-import { advanceTour, logWorkout } from '@/lib/firestore';
 import { getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
+import { getAppRuntime } from '@/lib/runtime';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
 import type { RankUpEvent, TourAdvanceEvent, TourLevel, TrackKey } from '@/lib/types';
 import { calculateXP, getBaseXP } from '@/lib/xp';
@@ -40,6 +40,7 @@ function buildTourAdvanceEvent(trackKey: TrackKey, currentTour: TourLevel): Tour
 }
 
 export function LogScreen() {
+  const appRuntime = getAppRuntime();
   const { track } = useParams();
   const { user } = useAuthSession();
   const { isOnline } = useNetworkStatus();
@@ -69,7 +70,9 @@ export function LogScreen() {
   const preview = trackKey && isValidValue
     ? {
         baseXp: getBaseXP(trackKey, numericValue),
-        totalXp: calculateXP(trackKey, numericValue),
+        totalXp: doubleXpStatus.active
+          ? getBaseXP(trackKey, numericValue) * 2
+          : calculateXP(trackKey, numericValue),
       }
     : null;
   const syncBanner = !isOnline
@@ -224,7 +227,7 @@ export function LogScreen() {
     });
 
     try {
-      const result = await logWorkout({
+      const result = await appRuntime.logWorkout({
         uid: readySignedInUser.uid,
         track: readyTrackKey,
         value: numericValue,
@@ -314,7 +317,7 @@ export function LogScreen() {
     });
 
     try {
-      const result = await advanceTour({
+      const result = await appRuntime.advanceTour({
         uid: readySignedInUser.uid,
         track: readyTrackKey,
         currentTrack: readyUserDoc.tracks[readyTrackKey],

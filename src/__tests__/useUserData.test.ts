@@ -10,7 +10,9 @@ import {
 } from '@/__tests__/mocks/firebase';
 
 vi.mock('@/lib/firebase', () => ({
-  db,
+  getFirebaseServices: () => ({
+    db,
+  }),
 }));
 
 vi.mock('firebase/firestore', () => ({

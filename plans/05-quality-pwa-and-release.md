@@ -4,12 +4,13 @@
 Harden the project into a shippable PWA. This milestone closes testing gaps, validates mobile behavior, confirms resilience around Firebase-facing code, finalizes offline/install behavior, and defines the release checklist for deployment.
 
 ## Status
-Implementation is in place for offline-aware UX, stale-data preservation, modal accessibility, reduced-motion handling, split production bundles, and Firebase Hosting SPA configuration. Final milestone closure still depends on completing the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md).
+Implementation is in place for offline-aware UX, stale-data preservation, modal accessibility, reduced-motion handling, split production bundles, Firebase Hosting SPA configuration, and a deterministic Playwright mobile smoke lane. Final milestone closure still depends on completing the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md).
 
 ## Implementation Plan
 ### Test Matrix
 - Finalize exhaustive unit coverage for `src/lib/ranks.ts` and `src/lib/xp.ts`.
 - Add focused integration coverage for logging flow, snapshot-driven updates, rank-up triggering, and tour-available prompting.
+- Add Playwright mobile smoke coverage for auth, home, log preview, rank-up, Tour advancement, and offline-disable behavior through a deterministic mocked runtime.
 - Keep component tests behavior-driven and avoid styling-only assertions.
 
 ### Firebase Mocking And Resilience
@@ -40,11 +41,14 @@ Implementation is in place for offline-aware UX, stale-data preservation, modal 
 - `src/__tests__/xp.test.ts`
 - component/integration test files under `src/__tests__/components/`
 - shared Firebase mocks under the test tree
+- `playwright.config.ts`
+- `e2e/`
 - `vite.config.ts`
 - `public/manifest.json`
 
 ## Acceptance Criteria
 - Unit and integration coverage protect the progression rules and user-critical flows.
+- Playwright smoke coverage protects the primary `390px` user journeys without requiring live Firebase services.
 - Firebase is fully mocked in tests and failure states are intentional.
 - Primary experiences are usable at `390px` width.
 - PWA manifest and service worker settings are release-ready.
@@ -55,6 +59,7 @@ Implementation is in place for offline-aware UX, stale-data preservation, modal 
 - Full threshold coverage for rank and XP logic remains green.
 - Logging a workout updates derived home-screen state through mocked snapshots.
 - Rank-up and tour-available behaviors are verified end to end with mocked write helpers.
+- Auth, home, log, rank-up, Tour, and offline smoke flows are verified end to end in Playwright against the mocked runtime.
 - Failure tests verify that partial-write behavior cannot occur through exposed helpers.
 - Manifest and PWA configuration are smoke-checked in build output.
 - Manual mobile QA confirms the app is legible and operable on a narrow viewport.
