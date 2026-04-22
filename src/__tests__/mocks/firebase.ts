@@ -61,6 +61,10 @@ interface RedirectResult {
   user: User;
 }
 
+interface PopupResult {
+  user: User;
+}
+
 type SeedCollectionDoc = Record<string, unknown> & { __id?: string };
 
 const authListeners = new Set<AuthListener>();
@@ -70,13 +74,15 @@ const committedBatches: MockBatchOperation[][] = [];
 let emitAuthImmediately = true;
 let autoIdCounter = 0;
 let pendingRedirectResult: RedirectResult | null = null;
+let pendingPopupResult: PopupResult | null = null;
 let redirectResultError: Error | null = null;
-let signInWithRedirectError: Error | null = null;
+let signInError: Error | null = null;
 let signOutError: Error | null = null;
 let batchCommitError: Error | null = null;
 let setDocError: Error | null = null;
 const authActionCalls = {
   getRedirectResult: 0,
+  signInWithPopup: 0,
   signInWithRedirect: 0,
   signOut: 0,
 };
@@ -248,6 +254,10 @@ export function setRedirectResult(user: User | null) {
   pendingRedirectResult = user ? { user } : null;
 }
 
+export function setPopupResult(user: User | null) {
+  pendingPopupResult = user ? { user } : null;
+}
+
 export function setAuthActionError(
   action: 'redirect_result' | 'sign_in' | 'sign_out',
   error: Error | null,
@@ -258,7 +268,7 @@ export function setAuthActionError(
   }
 
   if (action === 'sign_in') {
-    signInWithRedirectError = error;
+    signInError = error;
     return;
   }
 
@@ -312,9 +322,23 @@ export async function getRedirectResultMock() {
 export async function signInWithRedirectMock() {
   authActionCalls.signInWithRedirect += 1;
 
-  if (signInWithRedirectError) {
-    throw signInWithRedirectError;
+  if (signInError) {
+    throw signInError;
   }
+}
+
+export async function signInWithPopupMock() {
+  authActionCalls.signInWithPopup += 1;
+
+  if (signInError) {
+    throw signInError;
+  }
+
+  const nextResult = pendingPopupResult ?? { user: createMockUser() };
+  pendingPopupResult = null;
+  auth.currentUser = nextResult.user;
+  emitAuthState(nextResult.user);
+  return nextResult;
 }
 
 export async function signOutMock() {
@@ -545,12 +569,14 @@ export function resetFirebaseMocks() {
   emitAuthImmediately = true;
   autoIdCounter = 0;
   pendingRedirectResult = null;
+  pendingPopupResult = null;
   redirectResultError = null;
-  signInWithRedirectError = null;
+  signInError = null;
   signOutError = null;
   batchCommitError = null;
   setDocError = null;
   authActionCalls.getRedirectResult = 0;
+  authActionCalls.signInWithPopup = 0;
   authActionCalls.signInWithRedirect = 0;
   authActionCalls.signOut = 0;
 }

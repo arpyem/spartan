@@ -12,6 +12,7 @@ import type { User } from 'firebase/auth';
 import {
   getRedirectResult,
   onAuthStateChanged,
+  signInWithPopup,
   signInWithRedirect,
   signOut,
 } from 'firebase/auth';
@@ -222,7 +223,15 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         devLog.info('auth', 'sign_in_requested');
 
         try {
-          await signInWithRedirect(auth, googleProvider);
+          if (import.meta.env.DEV) {
+            const result = await signInWithPopup(auth, googleProvider);
+            devLog.info('auth', 'sign_in_popup_succeeded', {
+              user: summarizeAuthUserForDevLog(result.user),
+            });
+            await bootstrapUser(result.user);
+          } else {
+            await signInWithRedirect(auth, googleProvider);
+          }
         } catch (nextError) {
           devLog.error('auth', 'sign_in_failed', {
             error: sanitizeErrorForDevLog(nextError),

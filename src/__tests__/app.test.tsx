@@ -30,6 +30,7 @@ import {
   setInitialAuthState,
   setSetDocError,
   setDocMock,
+  signInWithPopupMock,
   signInWithRedirectMock,
   signOutMock,
   updateDocMock,
@@ -66,6 +67,7 @@ vi.mock('firebase/auth', async () => {
     ...actual,
     getRedirectResult: getRedirectResultMock,
     onAuthStateChanged: onAuthStateChangedMock,
+    signInWithPopup: signInWithPopupMock,
     signInWithRedirect: signInWithRedirectMock,
     signOut: signOutMock,
   };
@@ -145,7 +147,7 @@ describe('Plan 03 app flow', () => {
     expect(screen.getByText(/Syncing service record/i)).toBeInTheDocument();
   });
 
-  it('renders the auth surface and starts Google redirect sign-in', async () => {
+  it('renders the auth surface and starts Google popup sign-in in dev', async () => {
     setInitialAuthState(null);
     const { default: App } = await import('@/App');
     const user = userEvent.setup();
@@ -155,7 +157,7 @@ describe('Plan 03 app flow', () => {
     expect(screen.getByText(/Spartan ID Required/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Sign In With Google/i }));
 
-    expect(getAuthActionCalls().signInWithRedirect).toBe(1);
+    expect(getAuthActionCalls().signInWithPopup).toBe(1);
   });
 
   it('disables Google sign-in while offline', async () => {
