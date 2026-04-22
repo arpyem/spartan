@@ -77,4 +77,30 @@ describe('useUserData', () => {
     expect(result.current.status).toBe('error');
     expect(result.current.error?.message).toMatch(/listener failed/i);
   });
+
+  it('keeps the last good document when a later snapshot fails', async () => {
+    const { useUserData } = await import('@/hooks/useUserData');
+    const { result } = renderHook(() => useUserData('spartan-117'));
+
+    await act(async () => {
+      emitDocSnapshot('users/spartan-117', {
+        displayName: 'Master Chief',
+        email: 'chief@example.com',
+        photoURL: '',
+        createdAt: { __kind: 'serverTimestamp' },
+        tracks: {
+          cardio: { xp: 10, tour: 1 },
+          legs: { xp: 0, tour: 1 },
+          push: { xp: 0, tour: 1 },
+          pull: { xp: 0, tour: 1 },
+          core: { xp: 0, tour: 1 },
+        },
+      });
+      emitSnapshotError('users/spartan-117', new Error('listener failed'));
+    });
+
+    expect(result.current.status).toBe('ready');
+    expect(result.current.userDoc?.displayName).toBe('Master Chief');
+    expect(result.current.error?.message).toMatch(/listener failed/i);
+  });
 });

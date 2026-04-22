@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface XPBarProps {
   progress: number;
@@ -6,11 +6,18 @@ interface XPBarProps {
   label?: string;
 }
 
+function readReducedMotionPreference() {
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export function XPBar({
   progress,
   doubleXPActive = false,
   label,
 }: XPBarProps) {
+  const reduceMotion = useReducedMotion() || readReducedMotionPreference();
   const normalizedProgress = Math.max(0, Math.min(100, progress));
   const fillClassName = doubleXPActive
     ? 'from-[var(--color-amber)] via-[#ffe086] to-[#f7b733]'
@@ -18,7 +25,7 @@ export function XPBar({
   const edgeGlowClassName = doubleXPActive ? 'bg-[#ffe5a3]/75' : 'bg-[#d8ffe7]/75';
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" aria-live={label ? 'polite' : undefined}>
       {label ? (
         <div className="flex items-center justify-between text-[0.68rem] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
           <span>{label}</span>
@@ -34,7 +41,11 @@ export function XPBar({
         <motion.div
           className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${fillClassName}`}
           animate={{ width: `${normalizedProgress}%` }}
-          transition={{ type: 'spring', stiffness: 60, damping: 12, mass: 1.2 }}
+          transition={
+            reduceMotion
+              ? { duration: 0.2, ease: 'easeOut' }
+              : { type: 'spring', stiffness: 60, damping: 12, mass: 1.2 }
+          }
           style={{
             boxShadow: doubleXPActive
               ? '0 0 18px rgba(245, 166, 35, 0.42)'
@@ -61,7 +72,11 @@ export function XPBar({
           aria-hidden="true"
           className={`absolute inset-y-[2px] w-6 rounded-full ${edgeGlowClassName} blur-md`}
           animate={{ left: `calc(${normalizedProgress}% - 0.75rem)` }}
-          transition={{ type: 'spring', stiffness: 60, damping: 14, mass: 1 }}
+          transition={
+            reduceMotion
+              ? { duration: 0.18, ease: 'easeOut' }
+              : { type: 'spring', stiffness: 60, damping: 14, mass: 1 }
+          }
         />
       </div>
     </div>

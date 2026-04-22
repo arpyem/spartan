@@ -3,6 +3,9 @@
 ## Summary
 Harden the project into a shippable PWA. This milestone closes testing gaps, validates mobile behavior, confirms resilience around Firebase-facing code, finalizes offline/install behavior, and defines the release checklist for deployment.
 
+## Status
+Implementation is in place for offline-aware UX, stale-data preservation, modal accessibility, reduced-motion handling, split production bundles, and Firebase Hosting SPA configuration. Final milestone closure still depends on completing the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md).
+
 ## Implementation Plan
 ### Test Matrix
 - Finalize exhaustive unit coverage for `src/lib/ranks.ts` and `src/lib/xp.ts`.
@@ -21,12 +24,14 @@ Harden the project into a shippable PWA. This milestone closes testing gaps, val
 
 ### PWA Hardening
 - Finalize manifest values, installability expectations, and service-worker behavior through `vite-plugin-pwa`.
+- Remove duplicate manifest ownership so the generated PWA manifest is the only source of truth.
 - Confirm app icons, theme colors, and caching behavior align with the product shell.
 - Decide which routes and assets must be available offline versus which flows can degrade gracefully when Firebase is unavailable.
 
 ### Build, Deploy, And Release Gates
 - Ensure `npm test` passes consistently.
 - Ensure `npm run build` passes with no TypeScript errors.
+- Ensure the build emits split chunks without the previous large-chunk warning.
 - Validate Firebase hosting configuration and deployment prerequisites.
 - Run a final qualitative review against the Halo 3 vibe bar before release.
 
@@ -44,6 +49,7 @@ Harden the project into a shippable PWA. This milestone closes testing gaps, val
 - Primary experiences are usable at `390px` width.
 - PWA manifest and service worker settings are release-ready.
 - Build and test gates pass cleanly before deployment.
+- Firebase Hosting SPA config is committed without checking in project-specific aliases.
 
 ## Test Cases
 - Full threshold coverage for rank and XP logic remains green.

@@ -1,7 +1,16 @@
+import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { RootLayout } from '@/components/RootLayout';
-import { HomeScreen } from '@/screens/HomeScreen';
-import { LogScreen } from '@/screens/LogScreen';
+
+const HomeScreen = lazy(async () => {
+  const module = await import('@/screens/HomeScreen');
+  return { default: module.HomeScreen };
+});
+
+const LogScreen = lazy(async () => {
+  const module = await import('@/screens/LogScreen');
+  return { default: module.LogScreen };
+});
 
 export function AppRoutes() {
   return (
@@ -14,4 +23,3 @@ export function AppRoutes() {
     </Routes>
   );
 }
-

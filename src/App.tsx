@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { BootScreen } from '@/components/BootScreen';
 import { AppRoutes } from '@/router';
@@ -22,7 +23,9 @@ function AppShell() {
         v7_startTransition: true,
       }}
     >
-      <AppRoutes />
+      <Suspense fallback={<BootScreen />}>
+        <AppRoutes />
+      </Suspense>
     </BrowserRouter>
   );
 }

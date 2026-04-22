@@ -1,17 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion, useAnimate } from 'framer-motion';
+import { AnimatePresence, motion, useAnimate, useReducedMotion } from 'framer-motion';
 import type { TourAdvanceEvent } from '@/lib/types';
 import { RankEmblem } from '@/components/RankEmblem';
 import { ShieldBackground } from '@/components/ShieldBackground';
+import { useDialogSurface } from '@/hooks/useDialogSurface';
 
 interface TourModalProps {
   event: TourAdvanceEvent | null;
   onClose: () => void;
 }
 
+function readReducedMotionPreference() {
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export function TourModal({ event, onClose }: TourModalProps) {
   const [scope, animate] = useAnimate();
+  const reduceMotion = useReducedMotion() || readReducedMotionPreference();
   const [isDismissEnabled, setIsDismissEnabled] = useState(false);
+  const { containerRef, descriptionId, titleId } = useDialogSurface({
+    isOpen: Boolean(event),
+    dismissOnEscape: isDismissEnabled,
+    onClose: isDismissEnabled ? onClose : undefined,
+  });
   const particles = useMemo(
     () =>
       Array.from({ length: 14 }, (_, index) => {
@@ -25,6 +38,10 @@ export function TourModal({ event, onClose }: TourModalProps) {
       }),
     [],
   );
+
+  useEffect(() => {
+    containerRef.current = scope.current as HTMLDivElement | null;
+  }, [containerRef, event, scope]);
 
   useEffect(() => {
     if (!event) {
@@ -51,49 +68,62 @@ export function TourModal({ event, onClose }: TourModalProps) {
       ) as HTMLElement[];
 
       if (oldEmblem) {
-        await animate(oldEmblem, { opacity: [1, 0], scale: [1, 0.82] }, { duration: 0.32, ease: 'easeOut' });
+        await animate(
+          oldEmblem,
+          { opacity: [1, 0], scale: reduceMotion ? [1, 0.94] : [1, 0.82] },
+          { duration: reduceMotion ? 0.14 : 0.32, ease: 'easeOut' },
+        );
       }
 
       if (shield) {
         await animate(
           shield,
-          { opacity: [0, 1, 1], scale: [0, 1.3, 1] },
-          { duration: 1.4, times: [0, 0.7, 1], ease: 'easeOut' },
+          {
+            opacity: [0, 1, 1],
+            scale: reduceMotion ? [0.92, 1.04, 1] : [0, 1.3, 1],
+          },
+          {
+            duration: reduceMotion ? 0.36 : 1.4,
+            times: [0, 0.7, 1],
+            ease: 'easeOut',
+          },
         );
       }
 
       if (newEmblem) {
         await animate(
           newEmblem,
-          { opacity: [0, 1], scale: [0.78, 1] },
-          { duration: 0.36, ease: 'easeOut' },
+          { opacity: [0, 1], scale: reduceMotion ? [0.94, 1] : [0.78, 1] },
+          { duration: reduceMotion ? 0.18 : 0.36, ease: 'easeOut' },
         );
       }
 
-      await Promise.all(
-        particleElements.map((particle, index) =>
-          animate(
-            particle,
-            {
-              x: [0, particles[index]?.x ?? 0],
-              y: [0, particles[index]?.y ?? 0],
-              opacity: [0, 1, 0],
-              scale: [0.25, 1, 0.4],
-            },
-            {
-              duration: 0.8,
-              delay: index * 0.018,
-              ease: 'easeOut',
-            },
+      if (!reduceMotion) {
+        await Promise.all(
+          particleElements.map((particle, index) =>
+            animate(
+              particle,
+              {
+                x: [0, particles[index]?.x ?? 0],
+                y: [0, particles[index]?.y ?? 0],
+                opacity: [0, 1, 0],
+                scale: [0.25, 1, 0.4],
+              },
+              {
+                duration: 0.8,
+                delay: index * 0.018,
+                ease: 'easeOut',
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
 
       if (copy) {
         await animate(
           copy,
           { opacity: [0, 1], y: [16, 0] },
-          { duration: 0.35, ease: 'easeOut' },
+          { duration: reduceMotion ? 0.18 : 0.35, ease: 'easeOut' },
         );
       }
 
@@ -107,7 +137,7 @@ export function TourModal({ event, onClose }: TourModalProps) {
     return () => {
       isCancelled = true;
     };
-  }, [animate, event, particles, scope]);
+  }, [animate, event, particles, reduceMotion, scope]);
 
   return (
     <AnimatePresence>
@@ -123,7 +153,15 @@ export function TourModal({ event, onClose }: TourModalProps) {
             }
           }}
         >
-          <div ref={scope} className="relative w-full max-w-sm">
+          <div
+            ref={scope}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
+            tabIndex={-1}
+            className="relative w-full max-w-sm"
+          >
             <div className="panel relative overflow-hidden rounded-[2.2rem] border-[rgba(245,166,35,0.2)] bg-[radial-gradient(circle_at_top,rgba(67,47,18,0.36),transparent_38%),linear-gradient(180deg,rgba(8,9,12,0.96),rgba(3,4,6,0.98))] px-6 py-8">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,166,35,0.14),transparent_46%)]" />
 
@@ -176,14 +214,24 @@ export function TourModal({ event, onClose }: TourModalProps) {
                 <p className="font-display text-sm font-semibold uppercase tracking-[0.38em] text-[var(--color-amber)]">
                   Tour Advanced
                 </p>
-                <h2 className="font-display mt-3 text-3xl font-bold tracking-[0.12em] text-white">
+                <h2
+                  id={titleId}
+                  className="font-display mt-3 text-3xl font-bold tracking-[0.12em] text-white"
+                >
                   {event.nextTourLabel}
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
+                <p
+                  id={descriptionId}
+                  className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]"
+                >
                   {event.trackLabel} reset to {event.nextRankName} beneath a permanent
                   new shield.
                 </p>
-                <p className="mt-4 font-hud text-[0.68rem] uppercase tracking-[0.3em] text-[rgba(255,240,190,0.76)]">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className="mt-4 font-hud text-[0.68rem] uppercase tracking-[0.3em] text-[rgba(255,240,190,0.76)]"
+                >
                   {isDismissEnabled ? 'Tap anywhere to continue' : 'Ceremony in progress'}
                 </p>
               </div>

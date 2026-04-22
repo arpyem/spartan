@@ -8,6 +8,8 @@ import {
   db,
   docMock,
   emitAuthState,
+  emitDocSnapshot,
+  emitSnapshotError,
   firebaseApp,
   getAuthActionCalls,
   getCommittedBatches,
@@ -23,6 +25,7 @@ import {
   seedDoc,
   setBatchCommitError,
   serverTimestampMock,
+  setAuthActionError,
   setAuthBootstrapMode,
   setInitialAuthState,
   setDocMock,
@@ -34,6 +37,13 @@ import {
 import type { DoubleXPStatus } from '@/lib/types';
 
 let currentDoubleXpStatus: DoubleXPStatus = { active: false, upcoming: false };
+
+function setOnlineState(isOnline: boolean) {
+  Object.defineProperty(window.navigator, 'onLine', {
+    configurable: true,
+    value: isOnline,
+  });
+}
 
 vi.mock('@/lib/firebase', () => ({
   firebaseApp,
@@ -116,6 +126,7 @@ describe('Plan 03 app flow', () => {
     vi.resetModules();
     vi.useRealTimers();
     currentDoubleXpStatus = { active: false, upcoming: false };
+    setOnlineState(true);
     window.history.pushState({}, '', '/');
   });
 
@@ -139,6 +150,44 @@ describe('Plan 03 app flow', () => {
     await user.click(screen.getByRole('button', { name: /Sign In With Google/i }));
 
     expect(getAuthActionCalls().signInWithRedirect).toBe(1);
+  });
+
+  it('disables Google sign-in while offline', async () => {
+    setInitialAuthState(null);
+    setOnlineState(false);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(screen.getByText(/network connection is required/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sign In With Google/i })).toBeDisabled();
+  });
+
+  it('surfaces redirect bootstrap failures on the auth screen', async () => {
+    setInitialAuthState(null);
+    setAuthActionError('redirect_result', new Error('redirect failed'));
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/redirect failed/i);
+    await user.click(screen.getByRole('button', { name: /Dismiss/i }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('surfaces sign-in failures without leaving the auth screen', async () => {
+    setInitialAuthState(null);
+    setAuthActionError('sign_in', new Error('popup blocked'));
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /Sign In With Google/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/popup blocked/i);
+    expect(screen.getByText(/Spartan ID Required/i)).toBeInTheDocument();
   });
 
   it('renders the live home screen, opens the info modal, and signs out', async () => {
@@ -179,6 +228,22 @@ describe('Plan 03 app flow', () => {
     });
   });
 
+  it('surfaces sign-out failures inside the service record modal', async () => {
+    const userModel = seedSignedInState();
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    setAuthActionError('sign_out', new Error('sign-out failed'));
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Open service record/i }));
+    await user.click(screen.getByRole('button', { name: /^Sign Out$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/sign-out failed/i);
+    expect(screen.getByText(/Spartan Details/i)).toBeInTheDocument();
+  });
+
   it('updates the app when auth becomes available after mount', async () => {
     setAuthBootstrapMode('deferred');
     const { default: App } = await import('@/App');
@@ -206,6 +271,74 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
   });
 
+  it('updates the home screen when realtime user data changes after mount', async () => {
+    const userModel = seedSignedInState(createMockUser({ uid: 'chief' }), {
+      cardio: { xp: 0, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Tour advancement available/i)).not.toBeInTheDocument();
+
+    await act(async () => {
+      emitDocSnapshot(`users/${userModel.uid}`, {
+        displayName: 'Master Chief',
+        email: 'chief@example.com',
+        photoURL: '',
+        createdAt: new Date('2026-04-01T00:00:00.000Z'),
+        tracks: {
+          cardio: { xp: 2000, tour: 1 },
+          legs: { xp: 0, tour: 1 },
+          push: { xp: 0, tour: 1 },
+          pull: { xp: 0, tour: 1 },
+          core: { xp: 0, tour: 1 },
+        },
+      });
+    });
+
+    expect(await screen.findByText(/Tour advancement available/i)).toBeInTheDocument();
+  });
+
+  it('keeps the home screen visible and shows a sync warning after a later snapshot failure', async () => {
+    const userModel = seedSignedInState();
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+
+    await act(async () => {
+      emitSnapshotError(`users/${userModel.uid}`, new Error('listener failed'));
+    });
+
+    expect(screen.getByRole('heading', { name: /Field Deck/i })).toBeInTheDocument();
+    expect(screen.getByText(/Live sync paused/i)).toBeInTheDocument();
+  });
+
+  it('reacts to browser offline events on signed-in surfaces', async () => {
+    const userModel = seedSignedInState();
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+
+    await act(async () => {
+      setOnlineState(false);
+      window.dispatchEvent(new Event('offline'));
+    });
+
+    expect(screen.getByText(/^Offline$/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/showing your last synced Spartan record/i),
+    ).toBeInTheDocument();
+  });
+
   it('updates the log preview live and shows a rank-up modal after submit', async () => {
     const userModel = seedSignedInState(createMockUser(), {
       cardio: { xp: 1, tour: 1 },
@@ -227,6 +360,53 @@ describe('Plan 03 app flow', () => {
     expect(screen.getByRole('heading', { name: /^Apprentice$/i })).toBeInTheDocument();
     expect(screen.getByText(/Cardio advanced from Recruit/i)).toBeInTheDocument();
     expect(getCommittedBatches()).toHaveLength(1);
+  });
+
+  it('keeps the typed workout input and surfaces an inline alert when the write fails', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    setBatchCommitError(new Error('Workout write failed.'));
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const valueInput = await screen.findByLabelText(/Enter minutes/i);
+    await user.type(valueInput, '10');
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Workout write failed/i);
+    expect(screen.getByDisplayValue('10')).toBeInTheDocument();
+    expect(screen.queryByText(/Cardio advanced from Recruit/i)).not.toBeInTheDocument();
+  });
+
+  it('disables workout logging while offline and updates when connectivity returns', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    setOnlineState(false);
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(await screen.findByText(/^Offline$/i)).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /Log It/i });
+    expect(button).toBeDisabled();
+    expect(screen.getByText(/Workout logging is disabled while the device is offline/i)).toBeInTheDocument();
+
+    await act(async () => {
+      setOnlineState(true);
+      window.dispatchEvent(new Event('online'));
+    });
+
+    await user.type(screen.getByLabelText(/Enter minutes/i), '10');
+    expect(screen.getByRole('button', { name: /Log It/i })).toBeEnabled();
   });
 
   it('surfaces Tour advancement, confirms it, and then plays the ceremony', async () => {

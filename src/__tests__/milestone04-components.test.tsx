@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { InfoModal } from '@/components/InfoModal';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
 import { TourModal } from '@/components/TourModal';
 import { XPBar } from '@/components/XPBar';
-import type { RankUpEvent, TourAdvanceEvent } from '@/lib/types';
+import type { RankUpEvent, TourAdvanceEvent, UserDoc, WorkoutStats } from '@/lib/types';
 
 const rankUpEvent: RankUpEvent = {
   track: 'cardio',
@@ -29,9 +32,53 @@ const tourAdvanceEvent: TourAdvanceEvent = {
   nextRankName: 'Recruit',
 };
 
+const userDoc: UserDoc = {
+  displayName: 'Master Chief',
+  email: 'chief@example.com',
+  photoURL: '',
+  createdAt: new Date('2026-04-01T00:00:00.000Z'),
+  tracks: {
+    cardio: { xp: 1, tour: 1 },
+    legs: { xp: 0, tour: 1 },
+    push: { xp: 0, tour: 1 },
+    pull: { xp: 0, tour: 1 },
+    core: { xp: 0, tour: 1 },
+  },
+};
+
+const workoutStats: WorkoutStats = {
+  totalWorkouts: 2,
+  totalXp: 4,
+  byTrack: {
+    cardio: { workouts: 2, totalValue: 40, totalXp: 4 },
+    legs: { workouts: 0, totalValue: 0, totalXp: 0 },
+    push: { workouts: 0, totalValue: 0, totalXp: 0 },
+    pull: { workouts: 0, totalValue: 0, totalXp: 0 },
+    core: { workouts: 0, totalValue: 0, totalXp: 0 },
+  },
+};
+
+function setReducedMotion(matches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: (query: string) => ({
+      matches: query.includes('prefers-reduced-motion') ? matches : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  });
+}
+
 describe('Milestone 04 components', () => {
   afterEach(() => {
     vi.useRealTimers();
+    setReducedMotion(false);
   });
 
   it('renders shield state for each tour and does not fall back to numeric text', () => {
@@ -70,8 +117,9 @@ describe('Milestone 04 components', () => {
     const { rerender } = render(<RankUpModal event={rankUpEvent} onClose={onClose} />);
 
     expect(screen.getByRole('heading', { name: /Apprentice/i })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /Apprentice/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('dialog', { name: /Apprentice/i }));
     expect(onClose).toHaveBeenCalledTimes(1);
 
     onClose.mockClear();
@@ -84,12 +132,61 @@ describe('Milestone 04 components', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('adds dialog semantics and restores focus when the info modal closes with Escape', async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open record
+          </button>
+          <InfoModal
+            isOpen={isOpen}
+            user={userDoc}
+            tracks={userDoc.tracks}
+            stats={workoutStats}
+            doubleXPStatus={{ active: false, upcoming: false }}
+            globalRankId={0}
+            onClose={() => setIsOpen(false)}
+            onSignOut={() => {}}
+          />
+        </>
+      );
+    }
+
+    render(<Harness />);
+
+    const trigger = screen.getByRole('button', { name: /Open record/i });
+    await user.click(trigger);
+
+    const dialog = await screen.findByRole('dialog', { name: /Spartan Details/i });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await waitFor(() => {
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /Spartan Details/i })).not.toBeInTheDocument();
+    });
+    expect(trigger).toHaveFocus();
+  });
+
   it('keeps Tour celebration locked until the ceremony completes', async () => {
     vi.useRealTimers();
+    const user = userEvent.setup();
     const onClose = vi.fn();
     const { container } = render(<TourModal event={tourAdvanceEvent} onClose={onClose} />);
 
+    expect(screen.getByRole('dialog', { name: /Tour 2/i })).toBeInTheDocument();
     expect(screen.getByText(/Ceremony in progress/i)).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(onClose).not.toHaveBeenCalled();
 
     fireEvent.click(container.firstChild as HTMLElement);
     expect(onClose).not.toHaveBeenCalled();
@@ -98,7 +195,21 @@ describe('Milestone 04 components', () => {
       await screen.findByText(/Tap anywhere to continue/i, {}, { timeout: 5000 }),
     ).toBeInTheDocument();
 
-    fireEvent.click(container.firstChild as HTMLElement);
+    await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(1);
   }, 10000);
+
+  it('shortens the Tour ceremony when reduced motion is requested', async () => {
+    vi.useRealTimers();
+    setReducedMotion(true);
+    const onClose = vi.fn();
+    const { container } = render(<TourModal event={tourAdvanceEvent} onClose={onClose} />);
+
+    expect(
+      await screen.findByText(/Tap anywhere to continue/i, {}, { timeout: 1500 }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(container.firstChild as HTMLElement);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  }, 4000);
 });

@@ -45,11 +45,11 @@ export function useUserData(uid?: string | null): UseUserDataResult {
         });
       },
       (error) => {
-        setState({
-          status: 'error',
-          userDoc: null,
+        setState((currentState) => ({
+          status: currentState.userDoc ? 'ready' : 'error',
+          userDoc: currentState.userDoc,
           error,
-        });
+        }));
       },
     );
 

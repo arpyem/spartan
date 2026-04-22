@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { DoubleXPBanner } from '@/components/DoubleXPBanner';
 import { GlobalRank } from '@/components/GlobalRank';
 import { InfoModal } from '@/components/InfoModal';
+import { StatusBanner } from '@/components/StatusBanner';
 import { TrackCard } from '@/components/TrackCard';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useDoubleXP } from '@/hooks/useDoubleXP';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import {
@@ -21,6 +23,7 @@ export function HomeScreen() {
   const navigate = useNavigate();
   const { busyAction, error, signOutUser, user } = useAuthSession();
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const { isOnline } = useNetworkStatus();
   const doubleXpStatus = useDoubleXP();
   const userData = useUserData(user?.uid);
   const workoutStats = useWorkoutStats(user?.uid);
@@ -44,7 +47,7 @@ export function HomeScreen() {
   if (userData.status === 'error' || workoutStats.status === 'error') {
     return (
       <section className="space-y-6 pt-4">
-        <div className="panel p-5">
+        <div role="alert" className="panel p-5">
           <p className="hud-kicker font-hud text-[0.65rem]">Sync issue</p>
           <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
             Unable to load home screen
@@ -74,6 +77,19 @@ export function HomeScreen() {
   const globalRankId = getGlobalRankIndex(userDoc.tracks);
   const globalRank = RANKS[globalRankId];
   const globalProgress = getGlobalRankProgress(userDoc.tracks);
+  const statusBanner = !isOnline
+    ? {
+        tone: 'warning' as const,
+        title: 'Offline',
+        body: 'Showing your last synced Spartan record. Live Firebase updates are paused until you reconnect.',
+      }
+    : userData.error || workoutStats.error
+      ? {
+          tone: 'warning' as const,
+          title: 'Live sync paused',
+          body: 'The latest Firebase subscription update failed. The field deck is still showing your last known data.',
+        }
+      : null;
 
   return (
     <>
@@ -101,6 +117,14 @@ export function HomeScreen() {
           progress={globalProgress}
           doubleXPActive={doubleXpStatus.active}
         />
+
+        {statusBanner ? (
+          <StatusBanner
+            tone={statusBanner.tone}
+            title={statusBanner.title}
+            body={statusBanner.body}
+          />
+        ) : null}
 
         <div className="grid gap-3">
           {TRACKS.map((track) => {

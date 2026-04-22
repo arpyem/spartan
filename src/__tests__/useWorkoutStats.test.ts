@@ -65,7 +65,24 @@ describe('useWorkoutStats', () => {
       emitSnapshotError('users/spartan-117/workouts', new Error('history failed'));
     });
 
-    expect(result.current.status).toBe('error');
+    expect(result.current.status).toBe('ready');
+    expect(result.current.stats.totalWorkouts).toBe(0);
+    expect(result.current.error?.message).toMatch(/history failed/i);
+  });
+
+  it('keeps the last aggregated stats when a later snapshot fails', async () => {
+    const { useWorkoutStats } = await import('@/hooks/useWorkoutStats');
+    const { result } = renderHook(() => useWorkoutStats('spartan-117'));
+
+    await act(async () => {
+      emitCollectionSnapshot('users/spartan-117/workouts', [
+        { __id: 'w1', track: 'cardio', value: 30, xpEarned: 4, doubleXP: false, note: '', timestamp: new Date('2026-04-01T12:00:00.000Z') },
+      ]);
+      emitSnapshotError('users/spartan-117/workouts', new Error('history failed'));
+    });
+
+    expect(result.current.status).toBe('ready');
+    expect(result.current.stats.totalWorkouts).toBe(1);
     expect(result.current.error?.message).toMatch(/history failed/i);
   });
 });

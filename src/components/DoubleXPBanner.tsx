@@ -13,6 +13,8 @@ export function DoubleXPBanner({ status }: DoubleXPBannerProps) {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className={`rounded-[1.4rem] border px-4 py-3 ${
         isActive
           ? 'border-[rgba(0,255,65,0.45)] bg-[rgba(0,255,65,0.12)] text-[var(--color-hud)]'

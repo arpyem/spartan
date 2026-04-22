@@ -86,11 +86,11 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
         });
       },
       (error) => {
-        setState({
-          status: 'error',
-          stats: createEmptyWorkoutStats(),
+        setState((currentState) => ({
+          status: currentState.status === 'ready' ? 'ready' : 'error',
+          stats: currentState.stats,
           error,
-        });
+        }));
       },
     );
 

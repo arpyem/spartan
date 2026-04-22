@@ -8,7 +8,9 @@ import { TourModal } from '@/components/TourModal';
 import { XPBar } from '@/components/XPBar';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useDoubleXP } from '@/hooks/useDoubleXP';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
+import { StatusBanner } from '@/components/StatusBanner';
 import { advanceTour, logWorkout } from '@/lib/firestore';
 import { getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
@@ -39,6 +41,7 @@ function buildTourAdvanceEvent(trackKey: TrackKey, currentTour: TourLevel): Tour
 export function LogScreen() {
   const { track } = useParams();
   const { user } = useAuthSession();
+  const { isOnline } = useNetworkStatus();
   const doubleXpStatus = useDoubleXP();
   const userData = useUserData(user?.uid);
   const [value, setValue] = useState('');
@@ -88,7 +91,7 @@ export function LogScreen() {
 
   if (userData.status === 'error' || !userData.userDoc || !user?.uid) {
     return (
-      <section className="panel mt-4 p-5">
+      <section role="alert" className="panel mt-4 p-5">
         <p className="hud-kicker font-hud text-[0.65rem]">Unavailable</p>
         <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
           Unable to load this track
@@ -114,6 +117,19 @@ export function LogScreen() {
         totalXp: calculateXP(trackKey, numericValue),
       }
     : null;
+  const syncBanner = !isOnline
+    ? {
+        tone: 'warning' as const,
+        title: 'Offline',
+        body: 'Showing your last synced track state. Reconnect before logging a workout or advancing a Tour.',
+      }
+    : userData.error
+      ? {
+          tone: 'warning' as const,
+          title: 'Live sync paused',
+          body: 'Recent Firebase updates failed. This screen is using the last known track state.',
+        }
+      : null;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,8 +138,15 @@ export function LogScreen() {
       return;
     }
 
+    if (!isOnline) {
+      setSubmitError('Reconnect to log workouts.');
+      return;
+    }
+
     setSubmitError(null);
     setTourError(null);
+    setRankUpEvent(null);
+    setPendingTourAdvance(null);
     setIsSubmitting(true);
 
     try {
@@ -170,6 +193,11 @@ export function LogScreen() {
 
   async function handleAdvanceTour() {
     if (!pendingTourAdvance) {
+      return;
+    }
+
+    if (!isOnline) {
+      setTourError('Reconnect to advance the Tour.');
       return;
     }
 
@@ -233,6 +261,14 @@ export function LogScreen() {
           </div>
         </div>
 
+        {syncBanner ? (
+          <StatusBanner
+            tone={syncBanner.tone}
+            title={syncBanner.title}
+            body={syncBanner.body}
+          />
+        ) : null}
+
         <form className="panel p-5" onSubmit={handleSubmit}>
           <label
             htmlFor="track-value"
@@ -272,7 +308,10 @@ export function LogScreen() {
             </button>
           </div>
 
-          <div className="mt-5 rounded-[1.4rem] border border-white/8 bg-black/25 p-4">
+          <div
+            className="mt-5 rounded-[1.4rem] border border-white/8 bg-black/25 p-4"
+            aria-live="polite"
+          >
             <p className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
               XP preview
             </p>
@@ -301,14 +340,27 @@ export function LogScreen() {
           />
 
           {submitError ? (
-            <div className="mt-4 rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+            <div
+              role="alert"
+              className="mt-4 rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+            >
               {submitError}
+            </div>
+          ) : null}
+
+          {!isOnline ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mt-4 rounded-[1.2rem] border border-[var(--color-steel)]/30 bg-[rgba(74,144,217,0.08)] px-4 py-3 text-sm text-[var(--color-text)]"
+            >
+              Workout logging is disabled while the device is offline.
             </div>
           ) : null}
 
           <button
             type="submit"
-            disabled={!preview || isSubmitting}
+            disabled={!preview || isSubmitting || !isOnline}
             className="focus-shell mt-5 w-full rounded-[1.4rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.24em] text-[var(--color-amber)] disabled:opacity-60"
           >
             {isSubmitting ? 'Logging...' : 'Log It'}
@@ -320,6 +372,7 @@ export function LogScreen() {
       <TourAdvancePrompt
         event={pendingTourAdvance}
         isSubmitting={isAdvancingTour}
+        isOffline={!isOnline}
         error={tourError}
         onClose={() => {
           setPendingTourAdvance(null);

@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useDialogSurface } from '@/hooks/useDialogSurface';
 import { RANKS } from '@/lib/ranks';
 import { TRACKS } from '@/lib/tracks';
 import type { DoubleXPStatus, TracksMap, UserDoc, WorkoutStats } from '@/lib/types';
@@ -49,6 +50,11 @@ export function InfoModal({
   onClose,
   onSignOut,
 }: InfoModalProps) {
+  const { containerRef, descriptionId, titleId } = useDialogSurface({
+    isOpen,
+    onClose,
+  });
+
   return (
     <AnimatePresence>
       {isOpen ? (
@@ -60,6 +66,12 @@ export function InfoModal({
           onClick={onClose}
         >
           <motion.section
+            ref={containerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
+            tabIndex={-1}
             className="panel max-h-[88vh] w-full overflow-y-auto rounded-[1.8rem] p-5"
             initial={{ y: 32, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -70,7 +82,10 @@ export function InfoModal({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="hud-kicker font-hud text-[0.65rem]">Service record</p>
-                <h2 className="font-display mt-2 text-2xl font-bold tracking-[0.12em] text-white">
+                <h2
+                  id={titleId}
+                  className="font-display mt-2 text-2xl font-bold tracking-[0.12em] text-white"
+                >
                   Spartan Details
                 </h2>
               </div>
@@ -84,7 +99,7 @@ export function InfoModal({
             </div>
 
             <div className="mt-6 space-y-6">
-              <section className="space-y-3">
+              <section id={descriptionId} className="space-y-3">
                 <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
                   Account
                 </h3>
@@ -220,7 +235,10 @@ export function InfoModal({
                   Sign out
                 </h3>
                 {error ? (
-                  <div className="rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                  <div
+                    role="alert"
+                    className="rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+                  >
                     {error}
                   </div>
                 ) : null}

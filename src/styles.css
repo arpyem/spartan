@@ -17,6 +17,10 @@
   color: var(--color-text);
 }
 
+html {
+  background: var(--color-bg);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -129,3 +133,10 @@ a {
   outline-offset: 3px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
