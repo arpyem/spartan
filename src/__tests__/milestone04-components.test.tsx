@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { GlobalRank } from '@/components/GlobalRank';
 import { InfoModal } from '@/components/InfoModal';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
+import { TrackCard } from '@/components/TrackCard';
 import { TrackBadge } from '@/components/TrackBadge';
 import { TourModal } from '@/components/TourModal';
 import { XPBar } from '@/components/XPBar';
@@ -100,6 +102,53 @@ describe('Milestone 04 components', () => {
 
     expect(screen.getByTestId('track-badge-cardio')).toBeInTheDocument();
     expect(screen.queryByText('🫀')).not.toBeInTheDocument();
+  });
+
+  it('keeps the service strip inside the global rank surface and opens record actions there', async () => {
+    const user = userEvent.setup();
+    const onOpenRecord = vi.fn();
+
+    render(
+      <GlobalRank
+        displayName="Master Chief"
+        rankId={0}
+        rankName="Recruit"
+        progress={18}
+        onOpenRecord={onOpenRecord}
+      />,
+    );
+
+    expect(screen.getByText(/Spartan gains/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Open service record/i }));
+    expect(onOpenRecord).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render visible Tour copy inside track cards', () => {
+    render(
+      <TrackCard
+        track={{
+          key: 'pull',
+          label: 'Pull',
+          badgeKey: 'pull',
+          presets: [
+            { key: 'row', label: 'Row' },
+            { key: 'pull-up', label: 'Pull-Up' },
+            { key: 'curl', label: 'Curl' },
+          ],
+        }}
+        rankId={0}
+        rankName="Recruit"
+        tour={2}
+        progress={0}
+        xp={0}
+        xpToNextRank={2}
+        onSelect={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(/^Pull$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Tour 2/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Recruit$/i)).toBeInTheDocument();
   });
 
   it('updates the XP bar and switches styling for Double XP', async () => {

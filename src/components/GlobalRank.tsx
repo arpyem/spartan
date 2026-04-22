@@ -3,16 +3,20 @@ import { RankEmblem } from '@/components/RankEmblem';
 import { XPBar } from '@/components/XPBar';
 
 interface GlobalRankProps {
+  displayName: string;
   rankId: number;
   rankName: string;
   progress: number;
+  onOpenRecord: () => void;
   doubleXPActive?: boolean;
 }
 
 export function GlobalRank({
+  displayName,
   rankId,
   rankName,
   progress,
+  onOpenRecord,
   doubleXPActive = false,
 }: GlobalRankProps) {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -57,11 +61,25 @@ export function GlobalRank({
   }, [isInfoOpen]);
 
   return (
-    <section className="service-frame service-command-surface p-4 sm:p-5">
+    <section className="service-frame service-command-surface service-global-rank p-4 sm:p-5 lg:p-6">
+      <div className="service-strip mb-4">
+        <div className="min-w-0">
+          <p className="service-label">Spartan gains</p>
+          <p className="truncate text-sm text-white">{displayName || 'Spartan'}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenRecord}
+          className="focus-shell service-button shrink-0 rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.22em]"
+          aria-label="Open service record"
+        >
+          Record
+        </button>
+      </div>
       <div className="service-header flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="service-label">Global rank</p>
-          <h2 className="font-display mt-2 text-[1.65rem] uppercase tracking-[0.08em] text-white sm:text-2xl">
+          <h2 className="font-display mt-2 text-[1.8rem] uppercase tracking-[0.08em] text-white sm:text-[2.3rem]">
             {rankName}
           </h2>
         </div>
@@ -86,38 +104,35 @@ export function GlobalRank({
               <div className="service-popover-section">
                 <p className="service-label">Global rank aggregate</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Composite standing is derived from the floor average of the five
-                  Spartan track rank indices, keeping the overall ladder tied to
-                  balanced progress.
+                  Global rank is the floor average of the five Spartan track rank
+                  indices.
                 </p>
               </div>
               <div className="service-popover-section">
                 <p className="service-label">Log workout</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Select a track row to log one session. Cardio records minutes;
-                  strength tracks record sets. After each resolved log flow, the deck
-                  returns here automatically.
+                  Tap any track tile to log one session. Cardio uses minutes;
+                  strength tracks use sets.
                 </p>
               </div>
             </div>
           ) : null}
         </div>
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-[auto,1fr] sm:items-center sm:gap-5">
-        <div className="flex justify-center sm:justify-start">
-          <RankEmblem rankId={rankId} tour={1} size={98} />
+      <div className="mt-5 flex min-h-[18rem] flex-col justify-between gap-5 lg:min-h-[30rem]">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="lg:hidden">
+            <RankEmblem rankId={rankId} tour={1} size={138} />
+          </div>
+          <div className="hidden lg:block">
+            <RankEmblem rankId={rankId} tour={1} size={186} />
+          </div>
         </div>
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="service-label">Composite tier progress</p>
-            <p className="font-hud text-[0.7rem] uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
-              Aggregate
-            </p>
-          </div>
           <XPBar
             progress={progress}
             doubleXPActive={doubleXPActive}
-            label="Composite tier progress"
+            label="Composite progress"
           />
         </div>
       </div>

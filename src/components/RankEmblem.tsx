@@ -507,8 +507,9 @@ export function RankEmblem({ rankId, tour, size = 72 }: RankEmblemProps) {
   const palette = getPalette(normalizedRankId);
   const glowId = useId().replace(/:/g, '-');
   const heroSurface = size >= 96;
-  const iconScale = tour > 1 ? 0.84 : 1;
-  const iconY = tour > 1 ? 48 : 50;
+  const iconScale = tour > 1 ? 0.82 : 0.98;
+  const iconY = 46;
+  const plateY = tour > 1 ? 46 : 47;
 
   return (
     <svg
@@ -538,7 +539,7 @@ export function RankEmblem({ rankId, tour, size = 72 }: RankEmblemProps) {
       >
         <ellipse
           cx="50"
-          cy={iconY}
+          cy={plateY}
           rx={tour > 1 ? '24' : '28'}
           ry={tour > 1 ? '24' : '27'}
           fill={palette.plate}

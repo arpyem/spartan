@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DoubleXPBanner } from '@/components/DoubleXPBanner';
 import { GlobalRank } from '@/components/GlobalRank';
+import { HomeStatusRail } from '@/components/HomeStatusRail';
 import { InfoModal } from '@/components/InfoModal';
 import { StatusBanner } from '@/components/StatusBanner';
 import { TrackCard } from '@/components/TrackCard';
@@ -140,88 +140,94 @@ export function HomeScreen() {
   const globalRankId = getGlobalRankIndex(userDoc.tracks);
   const globalRank = RANKS[globalRankId];
   const globalProgress = getGlobalRankProgress(userDoc.tracks);
-  const statusBanner = !isOnline
-    ? {
-        tone: 'warning' as const,
-        title: 'Offline',
-        body: 'Showing your last synced Spartan record. Live Firebase updates are paused until you reconnect.',
-      }
-    : userData.error || workoutStats.error
-      ? {
-          tone: 'warning' as const,
-          title: 'Live sync paused',
-          body: 'The latest Firebase subscription update failed. The field deck is still showing your last known data.',
-        }
-      : null;
+  const homeStatusItems = [
+    ...(!isOnline
+      ? [
+          {
+            key: 'offline',
+            tone: 'warning' as const,
+            title: 'Offline',
+            detail: 'Showing your last synced Spartan record until the connection returns.',
+          },
+        ]
+      : userData.error || workoutStats.error
+        ? [
+            {
+              key: 'live-sync-paused',
+              tone: 'warning' as const,
+              title: 'Live sync paused',
+              detail: 'The latest Firebase update failed. The deck is showing your last known data.',
+            },
+          ]
+        : []),
+    ...(doubleXpStatus.active || doubleXpStatus.upcoming
+      ? [
+          {
+            key: 'double-xp',
+            tone: 'boost' as const,
+            title: doubleXpStatus.active ? 'Double XP Active' : 'Double XP This Weekend',
+            detail: doubleXpStatus.active
+              ? 'All Friday-through-Sunday workout logs are paying out at 2x EXP.'
+              : 'The next scheduled two-times multiplier window starts on Friday.',
+          },
+        ]
+      : []),
+  ];
+  const trackTilePlacements = [
+    'lg:col-span-2 lg:col-start-1 lg:row-start-1',
+    'lg:col-span-2 lg:col-start-3 lg:row-start-1',
+    'lg:col-span-2 lg:col-start-5 lg:row-start-1',
+    'lg:col-span-2 lg:col-start-2 lg:row-start-2',
+    'col-span-2 lg:col-span-2 lg:col-start-4 lg:row-start-2',
+  ];
 
   return (
     <>
       <section className="space-y-4 pt-1">
-        <div className="service-strip">
-          <div className="min-w-0">
-            <p className="service-label">Spartan gains</p>
-            <p className="truncate text-sm text-white">{userDoc.displayName || 'Spartan'}</p>
+        <h1 className="sr-only">Service Record</h1>
+        <HomeStatusRail items={homeStatusItems} />
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] xl:items-stretch">
+          <GlobalRank
+            displayName={userDoc.displayName || 'Spartan'}
+            rankId={globalRankId}
+            rankName={globalRank.name}
+            progress={globalProgress}
+            onOpenRecord={() => setIsInfoOpen(true)}
+            doubleXPActive={doubleXpStatus.active}
+          />
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-6 lg:grid-rows-2">
+            {TRACKS.map((track, index) => {
+              const progress = userDoc.tracks[track.key];
+              const rank = getRankFromXP(progress.xp);
+
+              return (
+                <div key={track.key} className={trackTilePlacements[index]}>
+                  <TrackCard
+                    track={track}
+                    rankId={rank.id}
+                    rankName={rank.name}
+                    tour={progress.tour}
+                    progress={getRankProgress(progress.xp)}
+                    xp={progress.xp}
+                    xpToNextRank={getXpToNextRank(progress.xp)}
+                    doubleXPActive={doubleXpStatus.active}
+                    tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
+                    onSelect={() => {
+                      devLog.info('ui', 'track_card_selected', {
+                        track: track.key,
+                        xp: progress.xp,
+                        tour: progress.tour,
+                      });
+                      navigate(`/log/${track.key}`);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
-
-        <header className="service-header flex items-center justify-between gap-4 pb-2">
-          <h1 className="font-display service-title text-white">Service Record</h1>
-          <button
-            type="button"
-            onClick={() => setIsInfoOpen(true)}
-            className="focus-shell service-button shrink-0 rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.22em]"
-            aria-label="Open service record"
-          >
-            Record
-          </button>
-        </header>
-
-        <GlobalRank
-          rankId={globalRankId}
-          rankName={globalRank.name}
-          progress={globalProgress}
-          doubleXPActive={doubleXpStatus.active}
-        />
-
-        {statusBanner ? (
-          <StatusBanner
-            tone={statusBanner.tone}
-            title={statusBanner.title}
-            body={statusBanner.body}
-          />
-        ) : null}
-
-        <div className="space-y-3">
-          {TRACKS.map((track) => {
-            const progress = userDoc.tracks[track.key];
-            const rank = getRankFromXP(progress.xp);
-
-            return (
-              <TrackCard
-                key={track.key}
-                track={track}
-                rankId={rank.id}
-                rankName={rank.name}
-                tour={progress.tour}
-                progress={getRankProgress(progress.xp)}
-                xp={progress.xp}
-                xpToNextRank={getXpToNextRank(progress.xp)}
-                doubleXPActive={doubleXpStatus.active}
-                tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
-                onSelect={() => {
-                  devLog.info('ui', 'track_card_selected', {
-                    track: track.key,
-                    xp: progress.xp,
-                    tour: progress.tour,
-                  });
-                  navigate(`/log/${track.key}`);
-                }}
-              />
-            );
-          })}
-        </div>
-
-        <DoubleXPBanner status={doubleXpStatus} />
       </section>
 
       <InfoModal
