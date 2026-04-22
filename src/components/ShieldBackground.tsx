@@ -76,7 +76,7 @@ export function ShieldBackground({ tour }: ShieldBackgroundProps) {
         fill={style.fill}
         stroke={style.stroke}
         strokeWidth="4.4"
-        style={{ filter: `drop-shadow(0 0 12px ${style.shadow})` }}
+        style={{ filter: `drop-shadow(0 0 8px ${style.shadow})` }}
       />
       <path
         d={style.innerPath}

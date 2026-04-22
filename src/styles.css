@@ -119,6 +119,33 @@ a {
   font-family: "Share Tech Mono", monospace;
 }
 
+.rank-emblem-shell {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.rank-emblem-backlight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 42%;
+  height: 42%;
+  border-radius: 9999px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  filter: blur(4px);
+}
+
+.rank-emblem-svg {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
 .app-shell {
   min-height: 100vh;
   position: relative;
@@ -166,12 +193,7 @@ a {
 }
 
 .mobile-frame::after {
-  content: "";
-  position: absolute;
-  inset: 0.55rem;
-  pointer-events: none;
-  border: 1px solid rgba(218, 230, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(7, 15, 30, 0.66);
+  content: none;
 }
 
 .panel {
@@ -300,8 +322,73 @@ a {
     linear-gradient(180deg, rgba(12, 27, 50, 0.96), rgba(8, 19, 35, 0.96));
 }
 
+.service-home-strip {
+  background:
+    radial-gradient(circle at 88% 28%, rgba(145, 175, 224, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(12, 27, 50, 0.96), rgba(8, 19, 35, 0.96));
+}
+
+.service-home-strip-layout {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.service-home-strip-actions {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.service-home-strip-record {
+  width: fit-content;
+  min-width: 12rem;
+}
+
+.service-home-strip-rank {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: fit-content;
+  margin-left: auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.service-home-strip-emblem-frame {
+  display: flex;
+  width: 5.35rem;
+  height: 5.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(214, 225, 244, 0.24);
+  background:
+    linear-gradient(180deg, rgba(7, 16, 31, 0.92), rgba(5, 11, 21, 0.94)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 22px rgba(98, 127, 176, 0.14);
+}
+
+.service-track-deck {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.service-track-slot {
+  width: 100%;
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
 .service-track-card {
-  min-height: 14.75rem;
+  min-height: 13.5rem;
   background:
     radial-gradient(circle at 82% 84%, rgba(74, 103, 154, 0.06), transparent 26%),
     linear-gradient(180deg, rgba(9, 19, 35, 0.92), rgba(5, 12, 24, 0.92));
@@ -321,12 +408,11 @@ a {
 .service-global-rank-stage,
 .service-track-card-stage {
   position: relative;
-  min-height: 7.1rem;
-  overflow: hidden;
+  min-height: 5.8rem;
+  overflow: visible;
 }
 
-.service-global-rank-stage::before,
-.service-track-card-stage::before {
+.service-global-rank-stage::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -342,10 +428,65 @@ a {
     radial-gradient(circle at 50% 50%, rgba(79, 109, 162, 0.12), transparent 45%);
 }
 
-.service-track-card[data-selected="true"] .service-track-card-stage::before {
+.service-track-card-emblem-wrap {
+  position: relative;
+  isolation: isolate;
+}
+
+.service-track-card-emblem-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 2% 4%;
+  z-index: 0;
+  border-radius: 9999px;
+  pointer-events: none;
   background:
-    radial-gradient(circle at 50% 50%, rgba(217, 134, 59, 0.28), transparent 32%),
-    radial-gradient(circle at 50% 50%, rgba(217, 134, 59, 0.13), transparent 49%);
+    radial-gradient(circle at 50% 50%, rgba(214, 231, 255, 0.46), transparent 22%),
+    radial-gradient(circle at 50% 50%, rgba(146, 179, 233, 0.32), transparent 46%),
+    radial-gradient(circle at 50% 50%, rgba(76, 109, 166, 0.16), transparent 72%);
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  opacity: 0.88;
+}
+
+.service-track-card-emblem-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 14% 18%;
+  z-index: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 247, 214, 0.22), transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255, 223, 138, 0.14), transparent 58%);
+  filter: blur(7px);
+  mix-blend-mode: screen;
+  opacity: 0.78;
+}
+
+.service-track-card-emblem-wrap > * {
+  position: relative;
+  z-index: 1;
+}
+
+.service-track-card[data-selected="true"] .service-track-card-emblem-wrap::before {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 239, 190, 0.48), transparent 22%),
+    radial-gradient(circle at 50% 50%, rgba(255, 194, 104, 0.3), transparent 46%),
+    radial-gradient(circle at 50% 50%, rgba(166, 95, 32, 0.16), transparent 72%);
+}
+
+.service-track-card[data-selected="true"] .service-track-card-emblem-wrap::after {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 249, 223, 0.24), transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255, 211, 147, 0.14), transparent 58%);
+}
+
+.service-track-card-emblem-wrap .rank-emblem-backlight {
+  width: 50%;
+  height: 50%;
+  filter: blur(5px);
+  opacity: 0.34 !important;
 }
 
 .service-status-chip {
@@ -522,6 +663,13 @@ a {
   border-top: 1px solid var(--color-divider);
 }
 
+@media (min-width: 640px) {
+  .service-track-slot {
+    flex: 1 1 clamp(13rem, 31vw, 16.8rem);
+    max-width: 17.6rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -541,6 +689,25 @@ a {
     padding: 0.35rem 0.65rem;
   }
 
+  .service-home-strip-record {
+    min-width: 9.4rem;
+  }
+
+  .service-home-strip-rank {
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .service-home-strip-emblem-frame {
+    width: 4.3rem;
+    height: 4.3rem;
+  }
+
+  .service-home-strip-layout {
+    gap: 0.6rem;
+  }
+
   .service-title {
     font-size: 1.9rem;
     line-height: 0.96;
@@ -552,10 +719,24 @@ a {
   }
 
   .service-track-card {
-    min-height: 13.5rem;
+    min-height: 12.75rem;
   }
 
   .service-track-card-stage {
-    min-height: 6.4rem;
+    min-height: 5.55rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-emblem-backlight {
+    width: 38%;
+    height: 38%;
+    filter: blur(3px);
+  }
+}
+
+@media (max-width: 360px) {
+  .service-home-strip-layout {
+    flex-wrap: wrap;
   }
 }

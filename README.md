@@ -2,6 +2,8 @@
 
 Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across Cardio, Legs, Push, Pull, and Core, earn EXP against the Halo 3 rank ladder, and eventually prestige each track with Tour shields. The project is still in active build-out, so this repository is both the app source and the execution guide for the remaining milestones.
 
+https://www.halopedia.org/Rank_(Halo_3)
+
 ## Current App Status
 - Plan 01 is complete: the repo now has a working React/Vite/Tailwind/Firebase foundation, route shell, test harness, and PWA baseline.
 - Plan 02 is complete: rank math, XP rules, deterministic Double XP state, Firestore write contracts, auth bootstrap helpers, and real-time hook boundaries are now implemented and tested.

@@ -52,17 +52,13 @@ test('renders the home screen from seeded data and opens the info modal', async 
   await expect(page.getByRole('button', { name: /Legs/i })).toHaveAttribute('data-selected', 'true');
   await expect(page.getByText('Log workout')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Open global rank info' }).click();
-  await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeVisible();
-  await expect(page.getByText(/Global rank is the floor average of the five Spartan track rank indices/i)).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeHidden();
-
-  await page.getByRole('button', { name: 'Open service record' }).click();
+  await page.getByRole('button', { name: /Open service record/i }).click();
 
   await expect(page.getByRole('dialog', { name: 'Service Record' })).toBeVisible();
   await expect(page.getByText('Total workouts')).toBeVisible();
   await expect(page.getByText(/^2$/)).toBeVisible();
+  await expect(page.getByText(/Global rank is the floor average of the five Spartan track rank indices/i)).toBeVisible();
+  await expect(page.getByText(/Tap any track tile to log one session. Cardio uses minutes; strength tracks use sets./i)).toBeVisible();
 
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog', { name: 'Service Record' })).toBeHidden();
@@ -103,4 +99,124 @@ test('keeps recruit track cards centered and compact on the 390px mobile layout'
     .evaluate((node) => Number.parseFloat(window.getComputedStyle(node).fontSize));
   expect(rankNameSize).toBeLessThanOrEqual(13);
   await expect(pullCard.locator('[data-testid="rank-emblem"]')).toBeVisible();
+});
+
+test('keeps the track-card emblem glow inside the card composition at 400px width', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 827 });
+  await gotoApp(
+    page,
+    '/',
+    createSignedInScenario({
+      userDoc: {
+        displayName: 'Arpyem',
+        email: 'chief@example.com',
+        photoURL: 'https://example.com/chief.png',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        tracks: {
+          cardio: { xp: 45, tour: 1 },
+          legs: { xp: 2000, tour: 1 },
+          push: { xp: 120, tour: 2 },
+          pull: { xp: 500, tour: 1 },
+          core: { xp: 30, tour: 1 },
+        },
+      },
+    }),
+  );
+
+  const cardioCard = page.getByRole('button', {
+    name: /^Cardio,/i,
+  });
+  const cardioStage = cardioCard.locator('.service-track-card-stage');
+  const cardioGlow = cardioCard.locator('.service-track-card-emblem-wrap');
+
+  await cardioCard.scrollIntoViewIfNeeded();
+  await expect(cardioCard).toBeVisible();
+
+  const [stageBox, glowBox] = await Promise.all([cardioStage.boundingBox(), cardioGlow.boundingBox()]);
+
+  expect(stageBox).not.toBeNull();
+  expect(glowBox).not.toBeNull();
+  expect(glowBox!.y).toBeGreaterThanOrEqual(stageBox!.y - 0.5);
+  expect(glowBox!.y + glowBox!.height).toBeLessThanOrEqual(stageBox!.y + stageBox!.height + 0.5);
+
+  await page.screenshot({ path: 'playwright-artifacts/home-layout-400x827.png', fullPage: true });
+});
+
+test('keeps track cards wrapped across multiple rows on landscape mobile screens', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await gotoApp(
+    page,
+    '/',
+    createSignedInScenario({
+      userDoc: {
+        displayName: 'Master Chief',
+        email: 'chief@example.com',
+        photoURL: 'https://example.com/chief.png',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        tracks: {
+          cardio: { xp: 45, tour: 1 },
+          legs: { xp: 2000, tour: 1 },
+          push: { xp: 120, tour: 2 },
+          pull: { xp: 500, tour: 1 },
+          core: { xp: 30, tour: 1 },
+        },
+      },
+    }),
+  );
+
+  const cardioCard = page.getByRole('button', {
+    name: /^Cardio,/i,
+  });
+  const legsCard = page.getByRole('button', {
+    name: /^Legs,/i,
+  });
+  const pushCard = page.getByRole('button', {
+    name: /^Push,/i,
+  });
+  const pullCard = page.getByRole('button', {
+    name: /^Pull,/i,
+  });
+  const coreCard = page.getByRole('button', {
+    name: /^Core,/i,
+  });
+
+  await expect(cardioCard).toBeVisible();
+  await expect(legsCard).toBeVisible();
+  await expect(pushCard).toBeVisible();
+  await expect(pullCard).toBeVisible();
+  await expect(coreCard).toBeVisible();
+
+  const [cardioBox, legsBox, pushBox, pullBox, coreBox] = await Promise.all([
+    cardioCard.boundingBox(),
+    legsCard.boundingBox(),
+    pushCard.boundingBox(),
+    pullCard.boundingBox(),
+    coreCard.boundingBox(),
+  ]);
+
+  expect(cardioBox).not.toBeNull();
+  expect(legsBox).not.toBeNull();
+  expect(pushBox).not.toBeNull();
+  expect(pullBox).not.toBeNull();
+  expect(coreBox).not.toBeNull();
+
+  const rowPositions = [
+    cardioBox?.y ?? 0,
+    legsBox?.y ?? 0,
+    pushBox?.y ?? 0,
+    pullBox?.y ?? 0,
+    coreBox?.y ?? 0,
+  ].reduce<number[]>((rows, yPosition) => {
+    if (!rows.some((existing) => Math.abs(existing - yPosition) < 8)) {
+      rows.push(yPosition);
+    }
+
+    return rows;
+  }, []);
+
+  expect(rowPositions.length).toBeGreaterThan(1);
 });

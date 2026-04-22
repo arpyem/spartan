@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import type { TourLevel } from '@/lib/types';
 import { ShieldBackground } from '@/components/ShieldBackground';
@@ -145,62 +144,57 @@ function renderRankGlyph(rankId: number, metrics: ReturnType<typeof getStageMetr
 export function RankEmblem({ rankId, tour, size = 72 }: RankEmblemProps) {
   const normalizedRankId = clampRankId(rankId);
   const palette = getPalette(normalizedRankId);
-  const glowId = useId().replace(/:/g, '-');
-  const heroSurface = size >= 96;
+  const gradientId = useId().replace(/:/g, '-');
   const metrics = getStageMetrics(tour);
+  const backlightOpacity = size >= 96 ? 0.32 : 0.24;
 
   return (
-    <svg
+    <span
+      className="rank-emblem-shell"
+      style={{ width: `${size}px`, height: `${size}px` }}
       aria-hidden="true"
-      data-testid="rank-emblem"
-      data-rank-id={normalizedRankId}
-      data-tour={tour}
-      data-shield={tour > 1 ? 'on' : 'off'}
-      viewBox="0 0 100 100"
-      width={size}
-      height={size}
-      className="overflow-visible"
     >
-      <defs>
-        <radialGradient id={`rank-emblem-plate-${glowId}`} cx="50%" cy="42%" r="68%">
-          <stop offset="0%" stopColor={palette.plateInner} />
-          <stop offset="55%" stopColor={palette.plate} />
-          <stop offset="100%" stopColor={palette.plate} stopOpacity="0.92" />
-        </radialGradient>
-        <filter id={`rank-emblem-glow-${glowId}`} x="-45%" y="-45%" width="190%" height="190%">
-          <feGaussianBlur stdDeviation="5.6" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-
-      <ShieldBackground tour={tour} />
-
-      <motion.g
-        filter={`url(#rank-emblem-glow-${glowId})`}
-        animate={heroSurface ? { opacity: [0.94, 1, 0.95] } : undefined}
-        transition={heroSurface ? { duration: 3.6, ease: 'easeInOut', repeat: Infinity } : undefined}
+      <span
+        className="rank-emblem-backlight"
+        style={{
+          backgroundColor: palette.plateInner,
+          boxShadow: `0 0 18px 8px ${palette.plate}`,
+          opacity: backlightOpacity,
+        }}
+      />
+      <svg
+        data-testid="rank-emblem"
+        data-rank-id={normalizedRankId}
+        data-tour={tour}
+        data-shield={tour > 1 ? 'on' : 'off'}
+        viewBox="0 0 100 100"
+        width={size}
+        height={size}
+        className="rank-emblem-svg"
       >
+        <defs>
+          <radialGradient id={`rank-emblem-plate-${gradientId}`} cx="50%" cy="42%" r="68%">
+            <stop offset="0%" stopColor={palette.plateInner} />
+            <stop offset="55%" stopColor={palette.plate} />
+            <stop offset="100%" stopColor={palette.plate} stopOpacity="0.92" />
+          </radialGradient>
+        </defs>
+
+        <ShieldBackground tour={tour} />
+
         <ellipse
           data-testid="rank-emblem-plate"
           cx={metrics.plateCx}
           cy={metrics.plateCy}
-          rx={metrics.plateRx + 2}
-          ry={metrics.plateRy + 2}
-          fill={`url(#rank-emblem-plate-${glowId})`}
-          opacity="0.38"
+          rx={metrics.plateRx}
+          ry={metrics.plateRy}
+          fill={`url(#rank-emblem-plate-${gradientId})`}
+          opacity="0.9"
         />
-      </motion.g>
-      <ellipse
-        cx={metrics.plateCx}
-        cy={metrics.plateCy}
-        rx={metrics.plateRx}
-        ry={metrics.plateRy}
-        fill={`url(#rank-emblem-plate-${glowId})`}
-        opacity="0.9"
-      />
-      <g data-testid="rank-emblem-glyph">
-        {renderRankGlyph(normalizedRankId, metrics)}
-      </g>
-    </svg>
+        <g data-testid="rank-emblem-glyph">
+          {renderRankGlyph(normalizedRankId, metrics)}
+        </g>
+      </svg>
+    </span>
   );
 }

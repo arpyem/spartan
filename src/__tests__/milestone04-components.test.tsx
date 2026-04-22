@@ -104,7 +104,7 @@ describe('Milestone 04 components', () => {
     expect(screen.queryByText('🫀')).not.toBeInTheDocument();
   });
 
-  it('keeps the service strip inside the global rank surface and opens record actions there', async () => {
+  it('renders the compact command strip and opens record actions there', async () => {
     const user = userEvent.setup();
     const onOpenRecord = vi.fn();
 
@@ -118,14 +118,13 @@ describe('Milestone 04 components', () => {
       />,
     );
 
-    expect(screen.getByText(/Spartan gains/i)).toBeInTheDocument();
-    const heroEmblems = screen.getAllByTestId('rank-emblem');
-    expect(heroEmblems).toHaveLength(2);
-    expect(heroEmblems[0]).toHaveAttribute('width', '256');
-    expect(heroEmblems[0]).toHaveAttribute('height', '256');
-    expect(heroEmblems[1]).toHaveAttribute('width', '364');
-    expect(heroEmblems[1]).toHaveAttribute('height', '364');
-    await user.click(screen.getByRole('button', { name: /Open service record/i }));
+    expect(screen.getByText(/Service record/i)).toBeInTheDocument();
+    expect(screen.getByText(/Global rank/i)).toBeInTheDocument();
+    expect(screen.getByText(/Composite progress/i)).toBeInTheDocument();
+    const heroEmblem = screen.getByTestId('rank-emblem');
+    expect(heroEmblem).toHaveAttribute('width', '92');
+    expect(heroEmblem).toHaveAttribute('height', '92');
+    await user.click(screen.getByRole('button', { name: /Open service record for master chief/i }));
     expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });
 

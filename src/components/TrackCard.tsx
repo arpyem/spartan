@@ -36,22 +36,22 @@ export function TrackCard({
       aria-label={`${track.label}, ${rankName}, ${xp} EXP${
         xpToNextRank === null ? ', Max rank' : `, ${xpToNextRank} EXP to next rank`
       }`}
-      className="focus-shell service-row service-track-card service-selection-glow block h-full w-full cursor-pointer px-3 py-3.5 text-left sm:px-3.5 sm:py-4"
+      className="focus-shell service-row service-track-card service-selection-glow block h-full w-full cursor-pointer px-3 py-3 text-left sm:px-3.5 sm:py-3.5"
       data-selected={tourAdvanceAvailable ? 'true' : 'false'}
     >
-      <div className="grid h-full grid-rows-[auto,1fr,auto] gap-2.5">
-        <div className="flex min-w-0 items-center justify-center gap-2.5 text-center">
-          <TrackBadge badgeKey={track.badgeKey} size={30} variant="glyph" />
-          <p className="text-[0.61rem] uppercase tracking-[0.18em] text-[rgba(214,225,244,0.66)]">
+      <div className="grid h-full content-between grid-rows-[auto,auto,auto] gap-2">
+        <div className="flex min-w-0 items-center justify-center gap-3 text-center">
+          <TrackBadge badgeKey={track.badgeKey} size={34} variant="glyph" />
+          <p className="text-[0.7rem] uppercase tracking-[0.17em] text-[rgba(214,225,244,0.66)]">
             {track.label}
           </p>
         </div>
-        <div className="service-track-card-stage flex min-h-0 items-center">
-          <div className="mx-auto flex w-full max-w-[6.95rem] flex-1 items-center justify-center">
-            <RankEmblem rankId={rankId} tour={tour} size={82} />
+        <div className="service-track-card-stage flex min-h-[5.2rem] items-center">
+          <div className="service-track-card-emblem-wrap mx-auto flex w-full max-w-[5.85rem] flex-1 items-center justify-center">
+            <RankEmblem rankId={rankId} tour={tour} size={74} />
           </div>
         </div>
-        <div className="mx-auto flex w-full max-w-[7rem] flex-col gap-2 text-center">
+        <div className="flex w-full flex-col gap-1.5 text-center">
           <div className="space-y-1.5">
             <p className="font-display text-[0.6rem] uppercase leading-[1.18] tracking-[0.05em] text-[rgba(214,225,244,0.72)]">
               {rankName}

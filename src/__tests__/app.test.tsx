@@ -272,19 +272,12 @@ describe('Plan 03 app flow', () => {
     expect(screen.queryByText(/Service Tour/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Log workout$/i)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Open global rank info/i }));
-    expect(await screen.findByRole('dialog', { name: /Global rank info/i })).toBeInTheDocument();
-    expect(screen.getByText(/Global rank is the floor average of the five Spartan track/i)).toBeInTheDocument();
-    expect(screen.getByText(/Tap any track tile to log one session/i)).toBeInTheDocument();
-    await user.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Global rank info/i })).not.toBeInTheDocument();
-    });
-
     await user.click(screen.getByRole('button', { name: /Open service record/i }));
     expect(await screen.findByRole('dialog', { name: /Service Record/i })).toBeInTheDocument();
     expect(screen.getByText(/Total workouts/i)).toBeInTheDocument();
     expect(screen.getByText(/^2$/)).toBeInTheDocument();
+    expect(screen.getByText(/Global rank is the floor average of the five Spartan track/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tap any track tile to log one session/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^Sign Out$/i }));
     await waitFor(() => {

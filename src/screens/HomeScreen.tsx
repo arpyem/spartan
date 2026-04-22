@@ -173,60 +173,49 @@ export function HomeScreen() {
         ]
       : []),
   ];
-  const trackTilePlacements = [
-    'lg:col-span-2 lg:col-start-1 lg:row-start-1',
-    'lg:col-span-2 lg:col-start-3 lg:row-start-1',
-    'lg:col-span-2 lg:col-start-5 lg:row-start-1',
-    'lg:col-span-2 lg:col-start-2 lg:row-start-2',
-    'col-span-2 lg:col-span-2 lg:col-start-4 lg:row-start-2',
-  ];
-
   return (
     <>
       <section className="space-y-4 pt-1">
         <h1 className="sr-only">Service Record</h1>
+        <GlobalRank
+          displayName={userDoc.displayName || 'Spartan'}
+          rankId={globalRankId}
+          rankName={globalRank.name}
+          progress={globalProgress}
+          onOpenRecord={() => setIsInfoOpen(true)}
+          doubleXPActive={doubleXpStatus.active}
+        />
         <HomeStatusRail items={homeStatusItems} />
 
-        <div className="grid gap-4 xl:h-[42rem] xl:max-h-[calc(100vh-7.5rem)] xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] xl:items-stretch">
-          <GlobalRank
-            displayName={userDoc.displayName || 'Spartan'}
-            rankId={globalRankId}
-            rankName={globalRank.name}
-            progress={globalProgress}
-            onOpenRecord={() => setIsInfoOpen(true)}
-            doubleXPActive={doubleXpStatus.active}
-          />
+        <div className="service-track-deck">
+          {TRACKS.map((track) => {
+            const progress = userDoc.tracks[track.key];
+            const rank = getRankFromXP(progress.xp);
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-6 lg:grid-rows-2 xl:h-full">
-            {TRACKS.map((track, index) => {
-              const progress = userDoc.tracks[track.key];
-              const rank = getRankFromXP(progress.xp);
-
-              return (
-                <div key={track.key} className={`min-h-0 ${trackTilePlacements[index]}`}>
-                  <TrackCard
-                    track={track}
-                    rankId={rank.id}
-                    rankName={rank.name}
-                    tour={progress.tour}
-                    progress={getRankProgress(progress.xp)}
-                    xp={progress.xp}
-                    xpToNextRank={getXpToNextRank(progress.xp)}
-                    doubleXPActive={doubleXpStatus.active}
-                    tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
-                    onSelect={() => {
-                      devLog.info('ui', 'track_card_selected', {
-                        track: track.key,
-                        xp: progress.xp,
-                        tour: progress.tour,
-                      });
-                      navigate(`/log/${track.key}`);
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <div key={track.key} className="service-track-slot min-h-0">
+                <TrackCard
+                  track={track}
+                  rankId={rank.id}
+                  rankName={rank.name}
+                  tour={progress.tour}
+                  progress={getRankProgress(progress.xp)}
+                  xp={progress.xp}
+                  xpToNextRank={getXpToNextRank(progress.xp)}
+                  doubleXPActive={doubleXpStatus.active}
+                  tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
+                  onSelect={() => {
+                    devLog.info('ui', 'track_card_selected', {
+                      track: track.key,
+                      xp: progress.xp,
+                      tour: progress.tour,
+                    });
+                    navigate(`/log/${track.key}`);
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
       </section>
 

@@ -176,6 +176,26 @@ export function InfoModal({
                   </section>
 
                   <section className="space-y-3">
+                    <p className="service-label">Info</p>
+                    <div className="service-well space-y-4 p-4">
+                      <div>
+                        <p className="service-label">Global rank aggregate</p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                          Global rank is the floor average of the five Spartan track rank
+                          indices.
+                        </p>
+                      </div>
+                      <div className="border-t border-[var(--color-divider)] pt-4">
+                        <p className="service-label">Log workout</p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                          Tap any track tile to log one session. Cardio uses minutes; strength
+                          tracks use sets.
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
                     <p className="service-label">Tour status</p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {TRACKS.map((track) => (
