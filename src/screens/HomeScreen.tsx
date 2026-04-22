@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DoubleXPBanner } from '@/components/DoubleXPBanner';
 import { GlobalRank } from '@/components/GlobalRank';
@@ -10,6 +10,7 @@ import { useDoubleXP } from '@/hooks/useDoubleXP';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
+import { devLog } from '@/lib/dev-logging';
 import {
   RANKS,
   getGlobalRankIndex,
@@ -21,12 +22,34 @@ import { TRACKS } from '@/lib/tracks';
 
 export function HomeScreen() {
   const navigate = useNavigate();
-  const { busyAction, error, signOutUser, user } = useAuthSession();
+  const {
+    bootstrapError,
+    bootstrapStatus,
+    busyAction,
+    error,
+    retryBootstrap,
+    signOutUser,
+    user,
+  } = useAuthSession();
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const { isOnline } = useNetworkStatus();
   const doubleXpStatus = useDoubleXP();
   const userData = useUserData(user?.uid);
   const workoutStats = useWorkoutStats(user?.uid);
+
+  useEffect(() => {
+    if (user) {
+      devLog.info('ui', 'home_screen_viewed', {
+        uidSuffix: user.uid.slice(-6),
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isInfoOpen) {
+      devLog.info('modal', 'info_modal_opened');
+    }
+  }, [isInfoOpen]);
 
   if (userData.status === 'loading' || workoutStats.status === 'loading') {
     return (
@@ -61,13 +84,51 @@ export function HomeScreen() {
   }
 
   if (!userData.userDoc) {
+    if (bootstrapStatus === 'error') {
+      return (
+        <section className="space-y-6 pt-4">
+          <div role="alert" className="panel p-5">
+            <p className="hud-kicker font-hud text-[0.65rem]">Profile sync failed</p>
+            <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+              Unable to prepare your Spartan profile
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
+              {bootstrapError ?? 'The initial Firestore profile write did not complete.'}
+            </p>
+            {!isOnline ? (
+              <div className="mt-4">
+                <StatusBanner
+                  tone="warning"
+                  title="Offline"
+                  body="Reconnect before retrying the initial service record sync."
+                />
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void retryBootstrap()}
+              disabled={!isOnline}
+              className="focus-shell mt-5 rounded-[1.2rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-amber)] disabled:opacity-60"
+            >
+              Retry Profile Sync
+            </button>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className="space-y-6 pt-4">
         <div className="panel p-5">
-          <p className="hud-kicker font-hud text-[0.65rem]">Awaiting bootstrap</p>
+          <p className="hud-kicker font-hud text-[0.65rem]">
+            {bootstrapStatus === 'running' ? 'Profile sync' : 'Awaiting bootstrap'}
+          </p>
           <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
             Preparing your Spartan profile
           </h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
+            Finalizing your service record so the home screen can subscribe to live track data.
+          </p>
         </div>
       </section>
     );
@@ -142,7 +203,14 @@ export function HomeScreen() {
                 xp={progress.xp}
                 doubleXPActive={doubleXpStatus.active}
                 tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
-                onSelect={() => navigate(`/log/${track.key}`)}
+                onSelect={() => {
+                  devLog.info('ui', 'track_card_selected', {
+                    track: track.key,
+                    xp: progress.xp,
+                    tour: progress.tour,
+                  });
+                  navigate(`/log/${track.key}`);
+                }}
               />
             );
           })}
@@ -171,7 +239,10 @@ export function HomeScreen() {
         globalRankId={globalRankId}
         isSigningOut={busyAction === 'sign_out'}
         error={error}
-        onClose={() => setIsInfoOpen(false)}
+        onClose={() => {
+          devLog.info('modal', 'info_modal_closed');
+          setIsInfoOpen(false);
+        }}
         onSignOut={signOutUser}
       />
     </>

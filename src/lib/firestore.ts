@@ -8,6 +8,7 @@ import {
   setDoc,
   writeBatch,
 } from 'firebase/firestore';
+import { devLog, sanitizeErrorForDevLog, summarizeTrackProgressForDevLog } from '@/lib/dev-logging';
 import { db } from '@/lib/firebase';
 import type {
   AdvanceTourInput,
@@ -42,6 +43,10 @@ export async function ensureUserDoc(user: User): Promise<boolean> {
   const existingUser = await getDoc(userRef);
 
   if (existingUser.exists()) {
+    devLog.debug('auth', 'ensure_user_doc_skipped', {
+      uidSuffix: user.uid.slice(-6),
+      reason: 'already_exists',
+    });
     return false;
   }
 
@@ -54,6 +59,9 @@ export async function ensureUserDoc(user: User): Promise<boolean> {
   };
 
   await setDoc(userRef, nextUserDoc);
+  devLog.info('auth', 'ensure_user_doc_created', {
+    uidSuffix: user.uid.slice(-6),
+  });
 
   return true;
 }
@@ -85,7 +93,33 @@ export async function logWorkout(
   batch.update(userRef, {
     [`tracks.${input.track}.xp`]: increment(xpEarned),
   });
-  await batch.commit();
+  devLog.debug('write', 'log_workout_batch_commit_started', {
+    track: input.track,
+    uidSuffix: input.uid.slice(-6),
+    value: input.value,
+    currentTrack: summarizeTrackProgressForDevLog(input.currentTrack),
+    xpEarned,
+  });
+
+  try {
+    await batch.commit();
+  } catch (error) {
+    devLog.error('write', 'log_workout_batch_commit_failed', {
+      track: input.track,
+      uidSuffix: input.uid.slice(-6),
+      error: sanitizeErrorForDevLog(error),
+    });
+    throw error;
+  }
+
+  devLog.info('write', 'log_workout_batch_commit_succeeded', {
+    track: input.track,
+    uidSuffix: input.uid.slice(-6),
+    workoutId: workoutRef.id,
+    xpBefore,
+    xpAfter,
+    tourBefore,
+  });
 
   return {
     workoutId: workoutRef.id,
@@ -122,7 +156,30 @@ export async function advanceTour(
     [`tracks.${input.track}.xp`]: 0,
     [`tracks.${input.track}.tour`]: nextTour,
   });
-  await batch.commit();
+  devLog.debug('write', 'advance_tour_batch_commit_started', {
+    track: input.track,
+    uidSuffix: input.uid.slice(-6),
+    currentTrack: summarizeTrackProgressForDevLog(input.currentTrack),
+    nextTour,
+  });
+
+  try {
+    await batch.commit();
+  } catch (error) {
+    devLog.error('write', 'advance_tour_batch_commit_failed', {
+      track: input.track,
+      uidSuffix: input.uid.slice(-6),
+      error: sanitizeErrorForDevLog(error),
+    });
+    throw error;
+  }
+
+  devLog.info('write', 'advance_tour_batch_commit_succeeded', {
+    track: input.track,
+    uidSuffix: input.uid.slice(-6),
+    previousTour: input.currentTrack.tour,
+    nextTour,
+  });
 
   return {
     previousTour: input.currentTrack.tour,

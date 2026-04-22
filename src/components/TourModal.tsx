@@ -4,6 +4,7 @@ import type { TourAdvanceEvent } from '@/lib/types';
 import { RankEmblem } from '@/components/RankEmblem';
 import { ShieldBackground } from '@/components/ShieldBackground';
 import { useDialogSurface } from '@/hooks/useDialogSurface';
+import { devLog } from '@/lib/dev-logging';
 
 interface TourModalProps {
   event: TourAdvanceEvent | null;
@@ -20,10 +21,23 @@ export function TourModal({ event, onClose }: TourModalProps) {
   const [scope, animate] = useAnimate();
   const reduceMotion = useReducedMotion() || readReducedMotionPreference();
   const [isDismissEnabled, setIsDismissEnabled] = useState(false);
+  function closeTourModal(reason: 'manual' | 'escape') {
+    if (!event) {
+      return;
+    }
+
+    devLog.info('modal', 'tour_modal_closed', {
+      track: event.track,
+      reason,
+      nextTour: event.nextTour,
+    });
+    onClose();
+  }
+
   const { containerRef, descriptionId, titleId } = useDialogSurface({
     isOpen: Boolean(event),
     dismissOnEscape: isDismissEnabled,
-    onClose: isDismissEnabled ? onClose : undefined,
+    onClose: isDismissEnabled ? () => closeTourModal('escape') : undefined,
   });
   const particles = useMemo(
     () =>
@@ -38,6 +52,16 @@ export function TourModal({ event, onClose }: TourModalProps) {
       }),
     [],
   );
+
+  useEffect(() => {
+    if (event) {
+      devLog.info('modal', 'tour_modal_opened', {
+        track: event.track,
+        previousTour: event.previousTour,
+        nextTour: event.nextTour,
+      });
+    }
+  }, [event]);
 
   useEffect(() => {
     containerRef.current = scope.current as HTMLDivElement | null;
@@ -149,7 +173,7 @@ export function TourModal({ event, onClose }: TourModalProps) {
           exit={{ opacity: 0 }}
           onClick={() => {
             if (isDismissEnabled) {
-              onClose();
+              closeTourModal('manual');
             }
           }}
         >

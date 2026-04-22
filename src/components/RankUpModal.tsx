@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { RankUpEvent } from '@/lib/types';
 import { RankEmblem } from '@/components/RankEmblem';
 import { useDialogSurface } from '@/hooks/useDialogSurface';
+import { devLog } from '@/lib/dev-logging';
 
 interface RankUpModalProps {
   event: RankUpEvent | null;
@@ -17,24 +18,34 @@ function readReducedMotionPreference() {
 
 export function RankUpModal({ event, onClose }: RankUpModalProps) {
   const reduceMotion = useReducedMotion() || readReducedMotionPreference();
-  const { containerRef, descriptionId, titleId } = useDialogSurface({
-    isOpen: Boolean(event),
-    onClose,
-  });
-
   useEffect(() => {
+    if (event) {
+      devLog.info('modal', 'rank_up_modal_opened', {
+        track: event.track,
+        previousRankId: event.previousRankId,
+        nextRankId: event.nextRankId,
+        tour: event.tour,
+      });
+    }
+  }, [event]);
+
+  function closeRankUpModal(reason: 'auto' | 'manual') {
     if (!event) {
       return;
     }
 
-    const timerId = window.setTimeout(() => {
-      onClose();
-    }, 4000);
+    devLog.info('modal', 'rank_up_modal_closed', {
+      track: event.track,
+      reason,
+      nextRankId: event.nextRankId,
+    });
+    onClose();
+  }
 
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  }, [event, onClose]);
+  const { containerRef, descriptionId, titleId } = useDialogSurface({
+    isOpen: Boolean(event),
+    onClose: () => closeRankUpModal('manual'),
+  });
 
   return (
     <AnimatePresence>
@@ -44,8 +55,18 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={() => closeRankUpModal('manual')}
         >
+          <motion.div
+            key={`rank-up-close-${event.track}-${event.xpAfter}-${event.tour}`}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 4, ease: 'easeInOut' }}
+            style={{ transformOrigin: '0% 50%' }}
+            onAnimationComplete={() => closeRankUpModal('auto')}
+          />
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.9)_0%,rgba(245,166,35,0.7)_22%,rgba(245,166,35,0)_55%)]"
@@ -106,7 +127,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
                   ease: 'easeOut',
                 }}
               >
-                <RankEmblem rankId={event.nextRankId} tour={1} size={126} />
+                <RankEmblem rankId={event.nextRankId} tour={event.tour} size={126} />
               </motion.div>
             </div>
 

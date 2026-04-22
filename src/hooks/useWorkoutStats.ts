@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
+import {
+  devLog,
+  sanitizeErrorForDevLog,
+  summarizeWorkoutStatsForDevLog,
+} from '@/lib/dev-logging';
 import { db } from '@/lib/firebase';
 import type {
   TrackKey,
@@ -71,6 +76,9 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
       error: null,
     });
 
+    devLog.info('snapshot', 'workout_stats_subscribed', {
+      uidSuffix: uid.slice(-6),
+    });
     const workoutsRef = collection(doc(db, 'users', uid), 'workouts');
     const unsubscribe = onSnapshot(
       workoutsRef,
@@ -78,14 +86,24 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
         const workouts = snapshot.docs.map(
           (workoutDoc) => workoutDoc.data() as WorkoutDoc,
         );
+        const nextStats = buildWorkoutStats(workouts);
+        devLog.debug('snapshot', 'workout_stats_snapshot_received', {
+          uidSuffix: uid.slice(-6),
+          workouts: snapshot.docs.length,
+          summary: summarizeWorkoutStatsForDevLog(nextStats),
+        });
 
         setState({
           status: 'ready',
-          stats: buildWorkoutStats(workouts),
+          stats: nextStats,
           error: null,
         });
       },
       (error) => {
+        devLog.error('snapshot', 'workout_stats_snapshot_failed', {
+          uidSuffix: uid.slice(-6),
+          error: sanitizeErrorForDevLog(error),
+        });
         setState((currentState) => ({
           status: currentState.status === 'ready' ? 'ready' : 'error',
           stats: currentState.stats,
@@ -94,7 +112,12 @@ export function useWorkoutStats(uid?: string | null): UseWorkoutStatsResult {
       },
     );
 
-    return unsubscribe;
+    return () => {
+      devLog.debug('snapshot', 'workout_stats_unsubscribed', {
+        uidSuffix: uid.slice(-6),
+      });
+      unsubscribe();
+    };
   }, [uid]);
 
   return state;

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDialogSurface } from '@/hooks/useDialogSurface';
+import { devLog } from '@/lib/dev-logging';
 import type { TourAdvanceEvent } from '@/lib/types';
 
 interface TourAdvancePromptProps {
@@ -19,9 +21,32 @@ export function TourAdvancePrompt({
   onClose,
   onConfirm,
 }: TourAdvancePromptProps) {
+  useEffect(() => {
+    if (event) {
+      devLog.info('modal', 'tour_prompt_opened', {
+        track: event.track,
+        previousTour: event.previousTour,
+        nextTour: event.nextTour,
+      });
+    }
+  }, [event]);
+
+  function closePrompt(reason: 'cancel' | 'manual') {
+    if (!event) {
+      return;
+    }
+
+    devLog.info('modal', 'tour_prompt_closed', {
+      track: event.track,
+      reason,
+      nextTour: event.nextTour,
+    });
+    onClose();
+  }
+
   const { containerRef, descriptionId, titleId } = useDialogSurface({
     isOpen: Boolean(event),
-    onClose,
+    onClose: () => closePrompt('manual'),
   });
 
   return (
@@ -32,7 +57,7 @@ export function TourAdvancePrompt({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={() => closePrompt('manual')}
         >
           <motion.section
             ref={containerRef}
@@ -93,14 +118,22 @@ export function TourAdvancePrompt({
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => closePrompt('cancel')}
                 className="focus-shell flex-1 rounded-[1.2rem] border border-white/10 px-4 py-3 text-sm uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
               >
                 Later
               </button>
               <button
                 type="button"
-                onClick={() => void onConfirm()}
+                onClick={() => {
+                  if (event) {
+                    devLog.info('modal', 'tour_prompt_confirmed', {
+                      track: event.track,
+                      nextTour: event.nextTour,
+                    });
+                  }
+                  void onConfirm();
+                }}
                 disabled={isSubmitting || isOffline}
                 className="focus-shell flex-1 rounded-[1.2rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.14)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-amber)] disabled:opacity-60"
               >

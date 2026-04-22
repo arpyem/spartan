@@ -11,6 +11,7 @@ import type { RankUpEvent, TourAdvanceEvent, UserDoc, WorkoutStats } from '@/lib
 const rankUpEvent: RankUpEvent = {
   track: 'cardio',
   trackLabel: 'Cardio',
+  tour: 1,
   previousRankId: 0,
   previousRankName: 'Recruit',
   nextRankId: 1,
@@ -111,26 +112,26 @@ describe('Milestone 04 components', () => {
     });
   });
 
-  it('supports tap dismissal and timed dismissal for rank-up celebrations', async () => {
-    vi.useFakeTimers();
+  it('supports tap dismissal for rank-up celebrations', async () => {
     const onClose = vi.fn();
-    const { rerender } = render(<RankUpModal event={rankUpEvent} onClose={onClose} />);
+    render(<RankUpModal event={rankUpEvent} onClose={onClose} />);
 
     expect(screen.getByRole('heading', { name: /Apprentice/i })).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: /Apprentice/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('dialog', { name: /Apprentice/i }));
     expect(onClose).toHaveBeenCalledTimes(1);
-
-    onClose.mockClear();
-    rerender(<RankUpModal event={rankUpEvent} onClose={onClose} />);
-
-    await act(async () => {
-      vi.advanceTimersByTime(4000);
-    });
-
-    expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('auto-dismisses rank-up celebrations and preserves the active Tour shield', async () => {
+    const onClose = vi.fn();
+    render(<RankUpModal event={{ ...rankUpEvent, tour: 3 }} onClose={onClose} />);
+
+    expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-tour', '3');
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledTimes(1);
+    }, { timeout: 4500 });
+  }, 6000);
 
   it('adds dialog semantics and restores focus when the info modal closes with Escape', async () => {
     const user = userEvent.setup();

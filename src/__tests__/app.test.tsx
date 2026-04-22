@@ -28,6 +28,7 @@ import {
   setAuthActionError,
   setAuthBootstrapMode,
   setInitialAuthState,
+  setSetDocError,
   setDocMock,
   signInWithRedirectMock,
   signOutMock,
@@ -43,6 +44,10 @@ function setOnlineState(isOnline: boolean) {
     configurable: true,
     value: isOnline,
   });
+}
+
+function getDevLogEvents() {
+  return window.__SPARTAN_DEV_LOGS__?.get().map((entry) => entry.event) ?? [];
 }
 
 vi.mock('@/lib/firebase', () => ({
@@ -128,6 +133,7 @@ describe('Plan 03 app flow', () => {
     currentDoubleXpStatus = { active: false, upcoming: false };
     setOnlineState(true);
     window.history.pushState({}, '', '/');
+    window.__SPARTAN_DEV_LOGS__?.clear();
   });
 
   it('renders the boot surface while auth state is unresolved', async () => {
@@ -188,6 +194,40 @@ describe('Plan 03 app flow', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/popup blocked/i);
     expect(screen.getByText(/Spartan ID Required/i)).toBeInTheDocument();
+  });
+
+  it('shows actionable retry UI when signed-in profile bootstrap fails', async () => {
+    const userModel = createMockUser({ uid: 'bootstrap-fail-ui' });
+    setInitialAuthState(userModel);
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    setSetDocError(new Error('Profile bootstrap failed.'));
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: /Unable to prepare your Spartan profile/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Profile bootstrap failed/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Retry Profile Sync/i })).toBeInTheDocument();
+  });
+
+  it('recovers profile bootstrap in-session after retrying a failed first write', async () => {
+    const userModel = createMockUser({ uid: 'bootstrap-retry' });
+    setInitialAuthState(userModel);
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    setSetDocError(new Error('Profile bootstrap failed.'));
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const retryButton = await screen.findByRole('button', { name: /Retry Profile Sync/i });
+    setSetDocError(null);
+    await user.click(retryButton);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(getStoredDoc(`users/${userModel.uid}`)?.exists).toBe(true);
   });
 
   it('renders the live home screen, opens the info modal, and signs out', async () => {
@@ -463,5 +503,80 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByText(/Tour write failed/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Advance Tour/i })).toBeInTheDocument();
     expect(screen.queryByText(/Tour Advanced/i)).not.toBeInTheDocument();
+  });
+
+  it('records auth and bootstrap lifecycle events in the dev log buffer', async () => {
+    const userModel = seedSignedInState(createMockUser({ uid: 'log-auth-user' }));
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+
+    expect(getDevLogEvents()).toEqual(
+      expect.arrayContaining([
+        'redirect_result_started',
+        'auth_state_changed',
+        'bootstrap_started',
+        'bootstrap_succeeded',
+      ]),
+    );
+  });
+
+  it('records offline transitions in the dev log buffer', async () => {
+    const userModel = seedSignedInState();
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+
+    await act(async () => {
+      setOnlineState(false);
+      window.dispatchEvent(new Event('offline'));
+    });
+
+    expect(getDevLogEvents()).toContain('network_status_changed');
+  });
+
+  it('records write and modal events for rank-up and Tour flows', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1999, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    expect(await screen.findByText(/Advance Cardio/i)).toBeInTheDocument();
+    expect(getDevLogEvents()).toEqual(
+      expect.arrayContaining([
+        'log_workout_started',
+        'log_workout_succeeded',
+        'rank_up_detected',
+        'rank_up_modal_opened',
+        'tour_advance_available_detected',
+        'tour_prompt_opened',
+      ]),
+    );
+
+    await user.click(screen.getByRole('button', { name: /Advance Tour/i }));
+
+    expect(await screen.findByText(/Tour Advanced/i)).toBeInTheDocument();
+    expect(getDevLogEvents()).toEqual(
+      expect.arrayContaining([
+        'tour_prompt_confirmed',
+        'tour_advance_started',
+        'tour_advance_succeeded',
+        'tour_modal_opened',
+      ]),
+    );
   });
 });

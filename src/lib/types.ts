@@ -1,5 +1,34 @@
 export type TrackKey = 'cardio' | 'legs' | 'push' | 'pull' | 'core';
 export type TourLevel = 1 | 2 | 3 | 4 | 5;
+export type DevLogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type DevLogCategory =
+  | 'app'
+  | 'auth'
+  | 'route'
+  | 'network'
+  | 'snapshot'
+  | 'write'
+  | 'ui'
+  | 'modal'
+  | 'pwa'
+  | 'error';
+export type DevLogValue =
+  | string
+  | number
+  | boolean
+  | null
+  | DevLogValue[]
+  | { [key: string]: DevLogValue };
+
+export interface DevLogEntry {
+  id: string;
+  timestamp: string;
+  level: DevLogLevel;
+  category: DevLogCategory;
+  event: string;
+  route: string | null;
+  data: DevLogValue | null;
+}
 
 export interface TrackProgress {
   xp: number;
@@ -51,6 +80,7 @@ export interface WorkoutDoc {
 export interface RankUpEvent {
   track: TrackKey;
   trackLabel: string;
+  tour: TourLevel;
   previousRankId: number;
   previousRankName: string;
   nextRankId: number;

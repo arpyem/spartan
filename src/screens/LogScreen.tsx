@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { RankEmblem } from '@/components/RankEmblem';
@@ -11,6 +11,7 @@ import { useDoubleXP } from '@/hooks/useDoubleXP';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
 import { StatusBanner } from '@/components/StatusBanner';
+import { devLog, sanitizeErrorForDevLog } from '@/lib/dev-logging';
 import { advanceTour, logWorkout } from '@/lib/firestore';
 import { getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
@@ -53,8 +54,90 @@ export function LogScreen() {
   const [tourCelebration, setTourCelebration] = useState<TourAdvanceEvent | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [tourError, setTourError] = useState<string | null>(null);
+  const previewSignatureRef = useRef<string | null>(null);
+  const trackKey = isTrackKey(track) ? track : null;
+  const trackMeta = trackKey ? TRACKS_BY_KEY[trackKey] : null;
+  const userDoc = userData.userDoc;
+  const signedInUser = user ?? null;
+  const currentTrack = trackKey && userDoc ? userDoc.tracks[trackKey] : null;
+  const currentRank = currentTrack ? getRankFromXP(currentTrack.xp) : null;
+  const currentProgress = currentTrack ? getRankProgress(currentTrack.xp) : 0;
+  const unitLabel = trackKey === 'cardio' ? 'minutes' : 'sets';
+  const adjustStep = trackKey === 'cardio' ? 5 : 1;
+  const numericValue = Number(value);
+  const isValidValue = Number.isInteger(numericValue) && numericValue > 0;
+  const preview = trackKey && isValidValue
+    ? {
+        baseXp: getBaseXP(trackKey, numericValue),
+        totalXp: calculateXP(trackKey, numericValue),
+      }
+    : null;
+  const syncBanner = !isOnline
+    ? {
+        tone: 'warning' as const,
+        title: 'Offline',
+        body: 'Showing your last synced track state. Reconnect before logging a workout or advancing a Tour.',
+      }
+    : userData.error
+      ? {
+          tone: 'warning' as const,
+          title: 'Live sync paused',
+          body: 'Recent Firebase updates failed. This screen is using the last known track state.',
+        }
+      : null;
 
-  if (!isTrackKey(track)) {
+  useEffect(() => {
+    if (!trackKey || !currentTrack) {
+      return;
+    }
+
+    devLog.info('ui', 'log_screen_viewed', {
+      track: trackKey,
+      isOnline,
+      xp: currentTrack.xp,
+      tour: currentTrack.tour,
+    });
+  }, [currentTrack, isOnline, trackKey]);
+
+  useEffect(() => {
+    if (!trackKey) {
+      return;
+    }
+
+    const signature = preview
+      ? JSON.stringify({
+          track: trackKey,
+          value: numericValue,
+          baseXp: preview.baseXp,
+          totalXp: preview.totalXp,
+          doubleXp: doubleXpStatus.active,
+        })
+      : JSON.stringify({
+          track: trackKey,
+          value,
+          valid: false,
+        });
+
+    if (previewSignatureRef.current === signature) {
+      return;
+    }
+
+    previewSignatureRef.current = signature;
+    devLog.debug('ui', 'log_preview_changed', {
+      track: trackKey,
+      enteredValue: value,
+      valid: Boolean(preview),
+      preview: preview
+        ? {
+            baseXp: preview.baseXp,
+            totalXp: preview.totalXp,
+            doubleXp: doubleXpStatus.active,
+          }
+        : null,
+    });
+  }, [doubleXpStatus.active, numericValue, preview, trackKey, value]);
+
+  if (!trackKey || !trackMeta) {
     return (
       <section className="panel mt-4 p-5">
         <p className="hud-kicker font-hud text-[0.65rem]">Route guard</p>
@@ -73,10 +156,6 @@ export function LogScreen() {
       </section>
     );
   }
-
-  const trackMeta = TRACKS_BY_KEY[track];
-  const unitLabel = track === 'cardio' ? 'minutes' : 'sets';
-  const adjustStep = track === 'cardio' ? 5 : 1;
 
   if (userData.status === 'loading') {
     return (
@@ -103,42 +182,30 @@ export function LogScreen() {
     );
   }
 
-  const trackKey = track;
-  const userDoc = userData.userDoc;
-  const signedInUser = user;
-  const currentTrack = userDoc.tracks[trackKey];
-  const currentRank = getRankFromXP(currentTrack.xp);
-  const currentProgress = getRankProgress(currentTrack.xp);
-  const numericValue = Number(value);
-  const isValidValue = Number.isInteger(numericValue) && numericValue > 0;
-  const preview = isValidValue
-    ? {
-        baseXp: getBaseXP(trackKey, numericValue),
-        totalXp: calculateXP(trackKey, numericValue),
-      }
-    : null;
-  const syncBanner = !isOnline
-    ? {
-        tone: 'warning' as const,
-        title: 'Offline',
-        body: 'Showing your last synced track state. Reconnect before logging a workout or advancing a Tour.',
-      }
-    : userData.error
-      ? {
-          tone: 'warning' as const,
-          title: 'Live sync paused',
-          body: 'Recent Firebase updates failed. This screen is using the last known track state.',
-        }
-      : null;
+  const readyTrackKey = trackKey!;
+  const readyTrackMeta = trackMeta!;
+  const readyUserDoc = userDoc!;
+  const readySignedInUser = signedInUser!;
+  const readyCurrentTrack = currentTrack!;
+  const readyCurrentRank = currentRank!;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!preview) {
+      devLog.warn('write', 'log_workout_blocked', {
+        track: trackKey,
+        reason: 'invalid_preview',
+        enteredValue: value,
+      });
       return;
     }
 
     if (!isOnline) {
+      devLog.warn('write', 'log_workout_blocked', {
+        track: trackKey,
+        reason: 'offline',
+      });
       setSubmitError('Reconnect to log workouts.');
       return;
     }
@@ -148,23 +215,47 @@ export function LogScreen() {
     setRankUpEvent(null);
     setPendingTourAdvance(null);
     setIsSubmitting(true);
+    devLog.info('write', 'log_workout_started', {
+      track: readyTrackKey,
+      value: numericValue,
+      noteLength: note.trim().length,
+      currentXp: readyCurrentTrack.xp,
+      currentTour: readyCurrentTrack.tour,
+    });
 
     try {
       const result = await logWorkout({
-        uid: signedInUser.uid,
-        track: trackKey,
+        uid: readySignedInUser.uid,
+        track: readyTrackKey,
         value: numericValue,
         note,
-        currentTrack,
+        currentTrack: readyCurrentTrack,
       });
 
       const previousRank = getRankFromXP(result.xpBefore);
       const nextRank = getRankFromXP(result.xpAfter);
+      devLog.info('write', 'log_workout_succeeded', {
+        track: readyTrackKey,
+        xpEarned: result.xpEarned,
+        xpBefore: result.xpBefore,
+        xpAfter: result.xpAfter,
+        doubleXp: result.doubleXP,
+        tourBefore: result.tourBefore,
+        tourAdvanceAvailable: result.tourAdvanceAvailable,
+      });
 
       if (previousRank.id !== nextRank.id) {
+        devLog.info('write', 'rank_up_detected', {
+          track: readyTrackKey,
+          previousRankId: previousRank.id,
+          nextRankId: nextRank.id,
+          xpBefore: result.xpBefore,
+          xpAfter: result.xpAfter,
+        });
         setRankUpEvent({
-          track: trackKey,
-          trackLabel: trackMeta.label,
+          track: readyTrackKey,
+          trackLabel: readyTrackMeta.label,
+          tour: readyCurrentTrack.tour,
           previousRankId: previousRank.id,
           previousRankName: previousRank.name,
           nextRankId: nextRank.id,
@@ -175,12 +266,21 @@ export function LogScreen() {
       }
 
       if (result.tourAdvanceAvailable) {
-        setPendingTourAdvance(buildTourAdvanceEvent(trackKey, result.tourBefore));
+        devLog.info('write', 'tour_advance_available_detected', {
+          track: readyTrackKey,
+          tourBefore: result.tourBefore,
+          xpAfter: result.xpAfter,
+        });
+        setPendingTourAdvance(buildTourAdvanceEvent(readyTrackKey, result.tourBefore));
       }
 
       setValue('');
       setNote('');
     } catch (nextError) {
+      devLog.error('write', 'log_workout_failed', {
+        track: readyTrackKey,
+        error: sanitizeErrorForDevLog(nextError),
+      });
       setSubmitError(
         nextError instanceof Error
           ? nextError.message
@@ -197,22 +297,41 @@ export function LogScreen() {
     }
 
     if (!isOnline) {
+      devLog.warn('write', 'tour_advance_blocked', {
+        track: readyTrackKey,
+        reason: 'offline',
+      });
       setTourError('Reconnect to advance the Tour.');
       return;
     }
 
     setTourError(null);
     setIsAdvancingTour(true);
+    devLog.info('write', 'tour_advance_started', {
+      track: readyTrackKey,
+      previousTour: pendingTourAdvance.previousTour,
+      nextTour: pendingTourAdvance.nextTour,
+    });
 
     try {
       const result = await advanceTour({
-        uid: signedInUser.uid,
-        track: trackKey,
-        currentTrack: userDoc.tracks[trackKey],
+        uid: readySignedInUser.uid,
+        track: readyTrackKey,
+        currentTrack: readyUserDoc.tracks[readyTrackKey],
       });
       setPendingTourAdvance(null);
-      setTourCelebration(buildTourAdvanceEvent(trackKey, result.previousTour));
+      devLog.info('write', 'tour_advance_succeeded', {
+        track: readyTrackKey,
+        previousTour: result.previousTour,
+        nextTour: result.nextTour,
+        xpBefore: result.xpBefore,
+      });
+      setTourCelebration(buildTourAdvanceEvent(readyTrackKey, result.previousTour));
     } catch (nextError) {
+      devLog.error('write', 'tour_advance_failed', {
+        track: readyTrackKey,
+        error: sanitizeErrorForDevLog(nextError),
+      });
       setTourError(
         nextError instanceof Error
           ? nextError.message
@@ -237,7 +356,7 @@ export function LogScreen() {
                 Return home
               </Link>
             </div>
-            <RankEmblem rankId={currentRank.id} tour={currentTrack.tour} size={70} />
+            <RankEmblem rankId={readyCurrentRank.id} tour={readyCurrentTrack.tour} size={70} />
           </div>
           <div className="mt-3 flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-black/35 text-3xl">
@@ -245,10 +364,10 @@ export function LogScreen() {
             </div>
             <div>
               <h2 className="font-display text-2xl font-bold tracking-[0.12em] text-white">
-                {trackMeta.label}
+                {readyTrackMeta.label}
               </h2>
               <p className="text-sm uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
-                {currentRank.name} | Tour {currentTrack.tour}
+                {readyCurrentRank.name} | Tour {readyCurrentTrack.tour}
               </p>
             </div>
           </div>
@@ -256,7 +375,7 @@ export function LogScreen() {
             <XPBar
               progress={currentProgress}
               doubleXPActive={doubleXpStatus.active}
-              label={`${currentTrack.xp} total EXP`}
+              label={`${readyCurrentTrack.xp} total EXP`}
             />
           </div>
         </div>
@@ -380,7 +499,12 @@ export function LogScreen() {
         }}
         onConfirm={handleAdvanceTour}
       />
-      <TourModal event={tourCelebration} onClose={() => setTourCelebration(null)} />
+      <TourModal
+        event={tourCelebration}
+        onClose={() => {
+          setTourCelebration(null);
+        }}
+      />
     </>
   );
 }

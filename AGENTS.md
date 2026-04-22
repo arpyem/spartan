@@ -111,6 +111,16 @@ After a successful Firestore write, compare `getRankFromXP(xpBefore).id` vs `get
 
 All Firebase config comes from `.env` via `import.meta.env.VITE_*`. Never hardcode API keys. Never commit `.env`. The `.env.example` file must stay up to date with all required keys.
 
+### 7. Dev Logging Stays Boundary-Only And Dev-Only
+
+Structured dev logging is required for browser QA and agent-assisted debugging, but it must stay out of production behavior and out of pure domain logic.
+
+- Keep dev logs behind dev-only guards. Production builds must not depend on the in-app log panel or emit routine runtime logs.
+- Never log secrets, Firebase config values, tokens, full email addresses, full photo URLs, or raw workout notes.
+- Log app boundaries and lifecycle transitions, not pure math internals. Good targets: auth, routing, network status, Firestore subscriptions, batched writes, and modal open/close flows.
+- If you touch auth, routing, Firebase subscriptions or writes, offline behavior, or modal/celebration flows, add or update structured dev logs as part of the same change.
+- Manual browser QA should use the in-app dev log panel and/or copied dev log output when reporting issues back to another agent.
+
 ---
 
 ## Workflow
@@ -130,6 +140,7 @@ All Firebase config comes from `.env` via `import.meta.env.VITE_*`. Never hardco
 - **Never skip the animation.** If a component has an animation spec in `SPARTAN-GAINS-SPEC.md`, the animation is required, not optional. A component without its animation is not done.
 - **Maintain planning docs.** Keep `README.md` and the files under `plans/` in sync with implementation progress. If a milestone starts, is blocked, or completes, update its status in `README.md` as part of the same change.
 - **Write session docs.** For each working session that changes the repo, add or update a session document under `docs/sessions/` summarizing what was done, what decisions were made, and any learnings from approaches that failed, needed rework, or required environment-specific fixes.
+- **Keep dev logs current.** When an interactive flow changes, verify its structured start/success/failure logging still exists and still reflects the real runtime path.
 
 ### Definition of Done for a Feature
 
@@ -138,6 +149,7 @@ A feature is complete when:
 - [ ] The component renders correctly with real data
 - [ ] All animations specified in the spec are implemented and feel correct
 - [ ] The feature works on a real mobile device (or mobile Chrome DevTools at 390px width)
+- [ ] Interactive flows emit accurate dev logs for start/success/failure states where applicable
 - [ ] `npm test` passes
 - [ ] `npm run build` produces no TypeScript errors
 

@@ -6,6 +6,7 @@ import {
   setPersistence,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { devLog, sanitizeErrorForDevLog } from '@/lib/dev-logging';
 import { getFirebaseEnv } from '@/lib/env';
 
 const firebaseEnv = getFirebaseEnv();
@@ -25,7 +26,8 @@ export const googleProvider = new GoogleAuthProvider();
 
 void setPersistence(auth, browserLocalPersistence).catch((error) => {
   if (import.meta.env.DEV) {
-    console.warn('Unable to configure Firebase auth persistence.', error);
+    devLog.warn('auth', 'auth_persistence_config_failed', {
+      error: sanitizeErrorForDevLog(error),
+    });
   }
 });
-
