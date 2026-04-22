@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createSignedInScenario, gotoApp } from './helpers';
 
-test('prompts for Tour advancement, commits it, and shows the Tour ceremony', async ({ page }) => {
+test('prompts for Tour advancement, commits it, and returns home after the ceremony', async ({ page }) => {
   await gotoApp(
     page,
     '/log/cardio',
@@ -31,5 +31,8 @@ test('prompts for Tour advancement, commits it, and shows the Tour ceremony', as
   await expect(page.getByText('Tour Advanced')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Tour 2' })).toBeVisible();
   await expect(page.getByText(/Cardio reset to Recruit/i)).toBeVisible();
-  await expect(page.getByText(/Recruit \| Tour 2/i)).toBeVisible();
+  await expect(page.getByText(/Tap anywhere to continue/i)).toBeVisible();
+
+  await page.getByText('Tour Advanced').click();
+  await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
 });

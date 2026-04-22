@@ -4,7 +4,7 @@
 Harden the project into a shippable PWA. This milestone closes testing gaps, validates mobile behavior, confirms resilience around Firebase-facing code, finalizes offline/install behavior, and defines the release checklist for deployment.
 
 ## Status
-Implementation is in place for offline-aware UX, stale-data preservation, modal accessibility, reduced-motion handling, split production bundles, Firebase Hosting SPA configuration, and a deterministic Playwright mobile smoke lane. Final milestone closure still depends on completing the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md).
+Implementation is in place for offline-aware UX, stale-data preservation, modal accessibility, reduced-motion handling, split production bundles, Firebase Hosting SPA configuration, a deterministic Playwright mobile smoke lane, a Halo 3 service-record visual fidelity pass across the authenticated app surfaces, and a follow-up home/log UX refinement pass that returns the user home after resolved log flows, tightens the mobile home layout, and replaces free-text workout notes with simple preset subtracks. Final milestone closure still depends on completing the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md).
 
 ## Implementation Plan
 ### Test Matrix

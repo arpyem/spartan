@@ -17,6 +17,7 @@ import {
   getGlobalRankProgress,
   getRankFromXP,
   getRankProgress,
+  getXpToNextRank,
 } from '@/lib/ranks';
 import { TRACKS } from '@/lib/tracks';
 
@@ -53,10 +54,10 @@ export function HomeScreen() {
 
   if (userData.status === 'loading' || workoutStats.status === 'loading') {
     return (
-      <section className="space-y-6 pt-4">
-        <div className="panel p-5">
-          <p className="hud-kicker font-hud text-[0.65rem]">Syncing</p>
-          <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+      <section className="space-y-5 pt-3">
+        <div className="service-frame p-5">
+          <p className="service-label">Syncing</p>
+          <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
             Loading service record
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -69,10 +70,10 @@ export function HomeScreen() {
 
   if (userData.status === 'error' || workoutStats.status === 'error') {
     return (
-      <section className="space-y-6 pt-4">
-        <div role="alert" className="panel p-5">
-          <p className="hud-kicker font-hud text-[0.65rem]">Sync issue</p>
-          <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+      <section className="space-y-5 pt-3">
+        <div role="alert" className="service-frame p-5">
+          <p className="service-label">Sync issue</p>
+          <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
             Unable to load home screen
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -86,10 +87,10 @@ export function HomeScreen() {
   if (!userData.userDoc) {
     if (bootstrapStatus === 'error') {
       return (
-        <section className="space-y-6 pt-4">
-          <div role="alert" className="panel p-5">
-            <p className="hud-kicker font-hud text-[0.65rem]">Profile sync failed</p>
-            <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+        <section className="space-y-5 pt-3">
+          <div role="alert" className="service-frame p-5">
+            <p className="service-label">Profile sync failed</p>
+            <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
               Unable to prepare your Spartan profile
             </h2>
             <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -108,7 +109,7 @@ export function HomeScreen() {
               type="button"
               onClick={() => void retryBootstrap()}
               disabled={!isOnline}
-              className="focus-shell mt-5 rounded-[1.2rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-amber)] disabled:opacity-60"
+              className="focus-shell service-button-amber mt-5 rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em]"
             >
               Retry Profile Sync
             </button>
@@ -118,16 +119,17 @@ export function HomeScreen() {
     }
 
     return (
-      <section className="space-y-6 pt-4">
-        <div className="panel p-5">
-          <p className="hud-kicker font-hud text-[0.65rem]">
+      <section className="space-y-5 pt-3">
+        <div className="service-frame p-5">
+          <p className="service-label">
             {bootstrapStatus === 'running' ? 'Profile sync' : 'Awaiting bootstrap'}
           </p>
-          <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+          <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
             Preparing your Spartan profile
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
-            Finalizing your service record so the home screen can subscribe to live track data.
+            Finalizing your service record so the home screen can subscribe to live track
+            data.
           </p>
         </div>
       </section>
@@ -154,22 +156,28 @@ export function HomeScreen() {
 
   return (
     <>
-      <section className="space-y-6 pt-4">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="hud-kicker font-hud text-[0.65rem]">Spartan gains</p>
-            <h1 className="font-display mt-2 text-2xl font-bold tracking-[0.16em] text-white">
-              Field Deck
-            </h1>
+      <section className="space-y-4 pt-1">
+        <div className="service-strip">
+          <div className="min-w-0">
+            <p className="service-label">Spartan gains</p>
+            <p className="truncate text-sm text-white">{userDoc.displayName || 'Spartan'}</p>
           </div>
           <button
             type="button"
             onClick={() => setIsInfoOpen(true)}
-            className="focus-shell rounded-full border border-white/10 px-3 py-2 text-sm uppercase tracking-[0.22em] text-[var(--color-steel)]"
+            className="focus-shell service-button rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.22em]"
             aria-label="Open service record"
           >
-            Info
+            Record
           </button>
+        </div>
+
+        <header className="service-header pb-3">
+          <p className="service-label">Field Deck</p>
+          <h1 className="font-display service-title mt-3 text-white">Service Record</h1>
+          <p className="service-subtitle mt-2">
+            Five-track Halo 3 progression dossier.
+          </p>
         </header>
 
         <GlobalRank
@@ -187,7 +195,7 @@ export function HomeScreen() {
           />
         ) : null}
 
-        <div className="grid gap-3">
+        <div className="space-y-3">
           {TRACKS.map((track) => {
             const progress = userDoc.tracks[track.key];
             const rank = getRankFromXP(progress.xp);
@@ -201,6 +209,7 @@ export function HomeScreen() {
                 tour={progress.tour}
                 progress={getRankProgress(progress.xp)}
                 xp={progress.xp}
+                xpToNextRank={getXpToNextRank(progress.xp)}
                 doubleXPActive={doubleXpStatus.active}
                 tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
                 onSelect={() => {
@@ -216,14 +225,15 @@ export function HomeScreen() {
           })}
         </div>
 
-        <div className="space-y-3">
-          <div className="panel rounded-[1.6rem] p-4">
-            <p className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-              Log workout
+        <div className="grid gap-3">
+          <div className="service-frame p-4">
+            <p className="service-label">Log workout</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)] sm:hidden">
+              Select a track row to log one session, then drop back to the deck.
             </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              Pick one of the track cards above to enter a workout for that training
-              lane.
+            <p className="mt-2 hidden text-sm leading-6 text-[var(--color-text-muted)] sm:block">
+              Select a track row above to enter minutes or sets for the next training
+              session.
             </p>
           </div>
           <DoubleXPBanner status={doubleXpStatus} />

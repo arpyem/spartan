@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
+import { StatusBanner } from '@/components/StatusBanner';
+import { SubtrackPresetIcon } from '@/components/SubtrackPresetIcon';
 import { TourAdvancePrompt } from '@/components/TourAdvancePrompt';
 import { TourModal } from '@/components/TourModal';
+import { TrackBadge } from '@/components/TrackBadge';
 import { XPBar } from '@/components/XPBar';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useDoubleXP } from '@/hooks/useDoubleXP';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUserData } from '@/hooks/useUserData';
-import { StatusBanner } from '@/components/StatusBanner';
 import { devLog, sanitizeErrorForDevLog } from '@/lib/dev-logging';
-import { getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
+import { RANKS, getRankFromXP, getRankProgress, getXpToNextRank } from '@/lib/ranks';
 import { getAppRuntime } from '@/lib/runtime';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
 import type { RankUpEvent, TourAdvanceEvent, TourLevel, TrackKey } from '@/lib/types';
@@ -39,15 +41,24 @@ function buildTourAdvanceEvent(trackKey: TrackKey, currentTour: TourLevel): Tour
   };
 }
 
+function buildAdjustmentSteps(trackKey: TrackKey) {
+  return trackKey === 'cardio' ? [-10, -5, 5, 10] : [-5, -1, 1, 5];
+}
+
+function buildPresetNote(trackKey: TrackKey, presetKey: string | null) {
+  return presetKey ? `preset:${trackKey}:${presetKey}` : '';
+}
+
 export function LogScreen() {
   const appRuntime = getAppRuntime();
+  const navigate = useNavigate();
   const { track } = useParams();
   const { user } = useAuthSession();
   const { isOnline } = useNetworkStatus();
   const doubleXpStatus = useDoubleXP();
   const userData = useUserData(user?.uid);
   const [value, setValue] = useState('');
-  const [note, setNote] = useState('');
+  const [selectedPresetKey, setSelectedPresetKey] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancingTour, setIsAdvancingTour] = useState(false);
   const [rankUpEvent, setRankUpEvent] = useState<RankUpEvent | null>(null);
@@ -55,6 +66,7 @@ export function LogScreen() {
   const [tourCelebration, setTourCelebration] = useState<TourAdvanceEvent | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [tourError, setTourError] = useState<string | null>(null);
+  const [returnHomeMode, setReturnHomeMode] = useState<'rank' | 'tour' | null>(null);
   const previewSignatureRef = useRef<string | null>(null);
   const trackKey = isTrackKey(track) ? track : null;
   const trackMeta = trackKey ? TRACKS_BY_KEY[trackKey] : null;
@@ -63,10 +75,12 @@ export function LogScreen() {
   const currentTrack = trackKey && userDoc ? userDoc.tracks[trackKey] : null;
   const currentRank = currentTrack ? getRankFromXP(currentTrack.xp) : null;
   const currentProgress = currentTrack ? getRankProgress(currentTrack.xp) : 0;
+  const xpToNextRank = currentTrack ? getXpToNextRank(currentTrack.xp) : null;
   const unitLabel = trackKey === 'cardio' ? 'minutes' : 'sets';
-  const adjustStep = trackKey === 'cardio' ? 5 : 1;
+  const adjustmentSteps = trackKey ? buildAdjustmentSteps(trackKey) : [];
   const numericValue = Number(value);
   const isValidValue = Number.isInteger(numericValue) && numericValue > 0;
+  const selectedPresetNote = trackKey ? buildPresetNote(trackKey, selectedPresetKey) : '';
   const preview = trackKey && isValidValue
     ? {
         baseXp: getBaseXP(trackKey, numericValue),
@@ -142,9 +156,9 @@ export function LogScreen() {
 
   if (!trackKey || !trackMeta) {
     return (
-      <section className="panel mt-4 p-5">
-        <p className="hud-kicker font-hud text-[0.65rem]">Route guard</p>
-        <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.1em] text-white">
+      <section className="service-frame mt-4 p-5">
+        <p className="service-label">Route guard</p>
+        <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
           Unknown Training Track
         </h2>
         <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -152,7 +166,7 @@ export function LogScreen() {
         </p>
         <Link
           to="/"
-          className="focus-shell mt-6 inline-flex rounded-full border border-[var(--color-steel)]/40 px-4 py-2 text-sm uppercase tracking-[0.2em] text-[var(--color-steel)]"
+          className="focus-shell service-button mt-6 inline-flex rounded-none px-4 py-2 text-sm uppercase tracking-[0.2em]"
         >
           Return home
         </Link>
@@ -162,9 +176,9 @@ export function LogScreen() {
 
   if (userData.status === 'loading') {
     return (
-      <section className="panel mt-4 p-5">
-        <p className="hud-kicker font-hud text-[0.65rem]">Syncing</p>
-        <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+      <section className="service-frame mt-4 p-5">
+        <p className="service-label">Syncing</p>
+        <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
           Loading {trackMeta.label}
         </h2>
       </section>
@@ -173,9 +187,9 @@ export function LogScreen() {
 
   if (userData.status === 'error' || !userData.userDoc || !user?.uid) {
     return (
-      <section role="alert" className="panel mt-4 p-5">
-        <p className="hud-kicker font-hud text-[0.65rem]">Unavailable</p>
-        <h2 className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white">
+      <section role="alert" className="service-frame mt-4 p-5">
+        <p className="service-label">Unavailable</p>
+        <h2 className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white">
           Unable to load this track
         </h2>
         <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -185,12 +199,21 @@ export function LogScreen() {
     );
   }
 
-  const readyTrackKey = trackKey!;
-  const readyTrackMeta = trackMeta!;
+  const readyTrackKey = trackKey;
+  const readyTrackMeta = trackMeta;
   const readyUserDoc = userDoc!;
   const readySignedInUser = signedInUser!;
   const readyCurrentTrack = currentTrack!;
   const readyCurrentRank = currentRank!;
+
+  function returnHome(reason: string) {
+    devLog.info('route', 'post_log_return_home_started', {
+      track: readyTrackKey,
+      reason,
+    });
+    setReturnHomeMode(null);
+    navigate('/', { replace: true });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -217,11 +240,14 @@ export function LogScreen() {
     setTourError(null);
     setRankUpEvent(null);
     setPendingTourAdvance(null);
+    setTourCelebration(null);
+    setReturnHomeMode(null);
     setIsSubmitting(true);
     devLog.info('write', 'log_workout_started', {
       track: readyTrackKey,
       value: numericValue,
-      noteLength: note.trim().length,
+      noteLength: selectedPresetNote.length,
+      presetKey: selectedPresetKey,
       currentXp: readyCurrentTrack.xp,
       currentTour: readyCurrentTrack.tour,
     });
@@ -231,7 +257,7 @@ export function LogScreen() {
         uid: readySignedInUser.uid,
         track: readyTrackKey,
         value: numericValue,
-        note,
+        note: selectedPresetNote,
         currentTrack: readyCurrentTrack,
       });
 
@@ -278,7 +304,15 @@ export function LogScreen() {
       }
 
       setValue('');
-      setNote('');
+      setSelectedPresetKey(null);
+
+      if (result.tourAdvanceAvailable) {
+        setReturnHomeMode('tour');
+      } else if (previousRank.id !== nextRank.id) {
+        setReturnHomeMode('rank');
+      } else {
+        returnHome('plain_log_complete');
+      }
     } catch (nextError) {
       devLog.error('write', 'log_workout_failed', {
         track: readyTrackKey,
@@ -347,31 +381,30 @@ export function LogScreen() {
 
   return (
     <>
-      <section className="space-y-6 pt-4">
-        <div className="panel p-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="hud-kicker font-hud text-[0.65rem]">Workout log</p>
-              <Link
-                to="/"
-                className="mt-3 inline-flex text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-steel)]"
-              >
-                Return home
-              </Link>
-            </div>
-            <RankEmblem rankId={readyCurrentRank.id} tour={readyCurrentTrack.tour} size={70} />
+      <section className="space-y-5 pt-3">
+        <div className="service-frame p-5">
+          <div className="service-strip">
+            <span className="service-label">Workout log</span>
+            <Link
+              to="/"
+              className="focus-shell service-button rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.2em]"
+            >
+              Return home
+            </Link>
           </div>
-          <div className="mt-3 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-black/35 text-3xl">
-              <span aria-hidden="true">{trackMeta.icon}</span>
-            </div>
+          <div className="mt-5 grid gap-5 sm:grid-cols-[auto,1fr,auto] sm:items-center">
+            <TrackBadge badgeKey={readyTrackMeta.badgeKey} size={62} />
             <div>
-              <h2 className="font-display text-2xl font-bold tracking-[0.12em] text-white">
+              <h2 className="font-display text-3xl uppercase tracking-[0.08em] text-white">
                 {readyTrackMeta.label}
               </h2>
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
-                {readyCurrentRank.name} | Tour {readyCurrentTrack.tour}
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">{readyCurrentRank.name}</p>
+              <p className="mt-2 text-[0.68rem] uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
+                {xpToNextRank === null ? 'Max rank achieved' : `${xpToNextRank} EXP to next rank`}
               </p>
+            </div>
+            <div className="flex justify-end">
+              <RankEmblem rankId={readyCurrentRank.id} tour={readyCurrentTrack.tour} size={82} />
             </div>
           </div>
           <div className="mt-5">
@@ -391,24 +424,28 @@ export function LogScreen() {
           />
         ) : null}
 
-        <form className="panel p-5" onSubmit={handleSubmit}>
-          <label
-            htmlFor="track-value"
-            className="hud-kicker font-hud text-[0.65rem]"
-          >
+        <form className="service-frame p-5" onSubmit={handleSubmit}>
+          <label htmlFor="track-value" className="service-label">
             Enter {unitLabel}
           </label>
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                setValue(String(Math.max(0, (Number(value) || 0) - adjustStep)))
-              }
-              className="focus-shell rounded-2xl border border-white/10 px-4 py-3 text-xl text-white"
-              aria-label={`Decrease ${unitLabel}`}
-            >
-              -
-            </button>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr),minmax(6rem,8.5rem),minmax(0,1fr)] items-center gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 gap-2">
+              {adjustmentSteps
+                .filter((step) => step < 0)
+                .map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() =>
+                      setValue(String(Math.max(0, (Number(value) || 0) + step)))
+                    }
+                    className="focus-shell service-button h-14 rounded-none px-2 text-sm uppercase tracking-[0.16em]"
+                    aria-label={`Decrease ${unitLabel} by ${Math.abs(step)}`}
+                  >
+                    {step}
+                  </button>
+                ))}
+            </div>
             <input
               id="track-value"
               type="number"
@@ -418,53 +455,62 @@ export function LogScreen() {
               value={value}
               onChange={(nextEvent) => setValue(nextEvent.target.value)}
               placeholder={`Enter ${unitLabel}`}
-              className="focus-shell min-w-0 flex-1 rounded-2xl border border-white/12 bg-black/35 px-4 py-3 text-center text-3xl text-white placeholder:text-[var(--color-text-muted)]"
+              className="focus-shell h-14 min-w-0 border border-[var(--color-panel-border)] bg-[rgba(4,9,18,0.72)] px-4 text-center text-3xl text-white placeholder:text-[var(--color-text-dim)]"
             />
-            <button
-              type="button"
-              onClick={() => setValue(String((Number(value) || 0) + adjustStep))}
-              className="focus-shell rounded-2xl border border-white/10 px-4 py-3 text-xl text-white"
-              aria-label={`Increase ${unitLabel}`}
-            >
-              +
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              {adjustmentSteps
+                .filter((step) => step > 0)
+                .map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => setValue(String((Number(value) || 0) + step))}
+                    className="focus-shell service-button h-14 rounded-none px-2 text-sm uppercase tracking-[0.16em]"
+                    aria-label={`Increase ${unitLabel} by ${step}`}
+                  >
+                    +{step}
+                  </button>
+                ))}
+            </div>
           </div>
 
-          <div
-            className="mt-5 rounded-[1.4rem] border border-white/8 bg-black/25 p-4"
-            aria-live="polite"
-          >
-            <p className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              XP preview
-            </p>
-            <p className="mt-2 font-display text-2xl font-semibold text-white">
-              {preview
-                ? doubleXpStatus.active
-                  ? `${preview.baseXp} x 2 = ${preview.totalXp} EXP`
-                  : `${preview.totalXp} EXP`
-                : 'Enter a positive whole number'}
-            </p>
-          </div>
+          <div className="mt-5">
+            <p className="service-label">Optional subtrack</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {readyTrackMeta.presets.map((preset) => {
+                const isSelected = selectedPresetKey === preset.key;
 
-          <label
-            htmlFor="workout-note"
-            className="mt-5 block text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]"
-          >
-            Workout note
-          </label>
-          <input
-            id="workout-note"
-            type="text"
-            value={note}
-            onChange={(nextEvent) => setNote(nextEvent.target.value)}
-            placeholder="What did you do? (optional)"
-            className="focus-shell mt-2 w-full rounded-2xl border border-white/12 bg-black/35 px-4 py-3 text-base text-white placeholder:text-[var(--color-text-muted)]"
-          />
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() =>
+                      setSelectedPresetKey((currentKey) =>
+                        currentKey === preset.key ? null : preset.key,
+                      )
+                    }
+                    className={`focus-shell service-well flex flex-col items-center gap-2 px-3 py-3 text-center ${
+                      isSelected
+                        ? 'border-[rgba(223,151,83,0.48)] bg-[linear-gradient(180deg,rgba(68,37,16,0.5),rgba(10,18,31,0.42))] text-white'
+                        : 'text-[var(--color-text-muted)]'
+                    }`}
+                    aria-pressed={isSelected}
+                    aria-label={`${preset.label}${isSelected ? ' selected' : ''}`}
+                  >
+                    <SubtrackPresetIcon presetKey={preset.key} />
+                    <span className="text-[0.66rem] uppercase tracking-[0.16em]">
+                      {preset.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {submitError ? (
             <div
               role="alert"
-              className="mt-4 rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+              className="service-frame mt-4 border-red-500/35 bg-[linear-gradient(180deg,rgba(76,15,15,0.46),rgba(21,8,8,0.42))] px-4 py-3 text-sm text-red-100"
             >
               {submitError}
             </div>
@@ -474,7 +520,7 @@ export function LogScreen() {
             <div
               role="status"
               aria-live="polite"
-              className="mt-4 rounded-[1.2rem] border border-[var(--color-steel)]/30 bg-[rgba(74,144,217,0.08)] px-4 py-3 text-sm text-[var(--color-text)]"
+              className="service-frame mt-4 px-4 py-3 text-sm text-[var(--color-text)]"
             >
               Workout logging is disabled while the device is offline.
             </div>
@@ -483,14 +529,22 @@ export function LogScreen() {
           <button
             type="submit"
             disabled={!preview || isSubmitting || !isOnline}
-            className="focus-shell mt-5 w-full rounded-[1.4rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.24em] text-[var(--color-amber)] disabled:opacity-60"
+            className="focus-shell service-button-amber mt-5 w-full rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.24em]"
           >
             {isSubmitting ? 'Logging...' : 'Log It'}
           </button>
         </form>
       </section>
 
-      <RankUpModal event={rankUpEvent} onClose={() => setRankUpEvent(null)} />
+      <RankUpModal
+        event={rankUpEvent}
+        onClose={() => {
+          setRankUpEvent(null);
+          if (returnHomeMode === 'rank') {
+            returnHome('rank_up_complete');
+          }
+        }}
+      />
       <TourAdvancePrompt
         event={pendingTourAdvance}
         isSubmitting={isAdvancingTour}
@@ -499,6 +553,9 @@ export function LogScreen() {
         onClose={() => {
           setPendingTourAdvance(null);
           setTourError(null);
+          if (returnHomeMode === 'tour') {
+            returnHome('tour_prompt_dismissed');
+          }
         }}
         onConfirm={handleAdvanceTour}
       />
@@ -506,6 +563,9 @@ export function LogScreen() {
         event={tourCelebration}
         onClose={() => {
           setTourCelebration(null);
+          if (returnHomeMode === 'tour') {
+            returnHome('tour_ceremony_complete');
+          }
         }}
       />
     </>

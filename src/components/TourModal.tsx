@@ -21,6 +21,7 @@ export function TourModal({ event, onClose }: TourModalProps) {
   const [scope, animate] = useAnimate();
   const reduceMotion = useReducedMotion() || readReducedMotionPreference();
   const [isDismissEnabled, setIsDismissEnabled] = useState(false);
+
   function closeTourModal(reason: 'manual' | 'escape') {
     if (!event) {
       return;
@@ -167,7 +168,7 @@ export function TourModal({ event, onClose }: TourModalProps) {
     <AnimatePresence>
       {event ? (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[rgba(2,3,5,0.92)] px-4 py-8 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[rgba(1,2,5,0.94)] px-4 py-8 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -184,12 +185,15 @@ export function TourModal({ event, onClose }: TourModalProps) {
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             tabIndex={-1}
-            className="relative w-full max-w-sm"
+            className="relative w-full max-w-xl"
           >
-            <div className="panel relative overflow-hidden rounded-[2.2rem] border-[rgba(245,166,35,0.2)] bg-[radial-gradient(circle_at_top,rgba(67,47,18,0.36),transparent_38%),linear-gradient(180deg,rgba(8,9,12,0.96),rgba(3,4,6,0.98))] px-6 py-8">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,166,35,0.14),transparent_46%)]" />
+            <div className="service-frame relative overflow-hidden px-6 py-8">
+              <div className="service-strip">
+                <span className="service-label">Tour advancement</span>
+                <span className="service-label">{event.trackLabel}</span>
+              </div>
 
-              <div className="relative mx-auto flex h-64 items-center justify-center">
+              <div className="relative mx-auto mt-6 flex h-64 items-center justify-center">
                 <div
                   data-tour-old-emblem
                   className="absolute inset-0 flex items-center justify-center"
@@ -223,11 +227,11 @@ export function TourModal({ event, onClose }: TourModalProps) {
                   <span
                     key={`tour-particle-${index}`}
                     data-tour-particle
-                    className="absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full bg-[#ffd977] opacity-0"
+                    className="absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full bg-[#f6c57f] opacity-0"
                     style={{
                       marginLeft: '-0.3125rem',
                       marginTop: '-0.3125rem',
-                      boxShadow: '0 0 16px rgba(255, 217, 119, 0.72)',
+                      boxShadow: '0 0 16px rgba(246, 197, 127, 0.72)',
                     }}
                     aria-hidden="true"
                   />
@@ -235,12 +239,12 @@ export function TourModal({ event, onClose }: TourModalProps) {
               </div>
 
               <div data-tour-copy className="opacity-0 text-center">
-                <p className="font-display text-sm font-semibold uppercase tracking-[0.38em] text-[var(--color-amber)]">
+                <p className="font-display text-sm font-semibold uppercase tracking-[0.32em] text-[#f6c57f]">
                   Tour Advanced
                 </p>
                 <h2
                   id={titleId}
-                  className="font-display mt-3 text-3xl font-bold tracking-[0.12em] text-white"
+                  className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white"
                 >
                   {event.nextTourLabel}
                 </h2>
@@ -254,7 +258,7 @@ export function TourModal({ event, onClose }: TourModalProps) {
                 <p
                   role="status"
                   aria-live="polite"
-                  className="mt-4 font-hud text-[0.68rem] uppercase tracking-[0.3em] text-[rgba(255,240,190,0.76)]"
+                  className="mt-4 text-[0.68rem] uppercase tracking-[0.28em] text-[var(--color-text-dim)]"
                 >
                   {isDismissEnabled ? 'Tap anywhere to continue' : 'Ceremony in progress'}
                 </p>

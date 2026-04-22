@@ -14,5 +14,6 @@ test('renders the signed-out shell and signs in without leaving the app in mock 
   await page.getByRole('button', { name: 'Sign In With Google' }).click();
 
   await expect(page).toHaveURL('http://127.0.0.1:4173/');
-  await expect(page.getByRole('heading', { name: 'Field Deck' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
+  await expect(page.getByText('Field Deck')).toBeVisible();
 });

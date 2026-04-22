@@ -4,6 +4,7 @@ import {
   getNextRankXP,
   getRankFromXP,
   getRankProgress,
+  getXpToNextRank,
   RANKS,
 } from '@/lib/ranks';
 import type { TracksMap } from '@/lib/types';
@@ -32,9 +33,9 @@ describe('getRankFromXP', () => {
     expect(getRankFromXP(2).name).toBe('Apprentice');
   });
 
-  it('returns 5-Star General at exactly 2000 XP and above', () => {
-    expect(getRankFromXP(2000).name).toBe('5-Star General');
-    expect(getRankFromXP(2500).name).toBe('5-Star General');
+  it('returns the top general title at exactly 2000 XP and above', () => {
+    expect(getRankFromXP(2000).name).toBe('General (Grade 4) 5-Star General');
+    expect(getRankFromXP(2500).name).toBe('General (Grade 4) 5-Star General');
   });
 
   it('handles every rank threshold boundary', () => {
@@ -56,6 +57,18 @@ describe('getNextRankXP', () => {
   it('returns null at max rank', () => {
     expect(getNextRankXP(2000)).toBeNull();
     expect(getNextRankXP(2500)).toBeNull();
+  });
+});
+
+describe('getXpToNextRank', () => {
+  it('returns the remaining XP inside a tier', () => {
+    expect(getXpToNextRank(105)).toBe(5);
+    expect(getXpToNextRank(40)).toBe(10);
+  });
+
+  it('returns null at max rank', () => {
+    expect(getXpToNextRank(2000)).toBeNull();
+    expect(getXpToNextRank(2500)).toBeNull();
   });
 });
 

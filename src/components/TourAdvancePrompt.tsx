@@ -53,7 +53,7 @@ export function TourAdvancePrompt({
     <AnimatePresence>
       {event ? (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/68 px-4 pb-6 pt-12 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(2,4,8,0.82)] px-4 pb-6 pt-12 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -66,32 +66,33 @@ export function TourAdvancePrompt({
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             tabIndex={-1}
-            className="panel w-full max-w-sm rounded-[2rem] border-[rgba(245,166,35,0.22)] bg-[linear-gradient(180deg,rgba(19,13,8,0.96),rgba(10,12,15,0.94))] px-6 py-7"
+            className="service-frame w-full max-w-2xl px-6 py-7"
             initial={{ y: 24, opacity: 0, scale: 0.96 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 16, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
             onClick={(nextEvent) => nextEvent.stopPropagation()}
           >
-            <p className="font-hud text-[0.68rem] uppercase tracking-[0.3em] text-[var(--color-amber)]">
-              Tour threshold reached
-            </p>
+            <div className="service-strip">
+              <span className="service-label">Tour threshold reached</span>
+              <span className="service-label">Prestige confirmation</span>
+            </div>
             <h2
               id={titleId}
-              className="font-display mt-3 text-2xl font-bold tracking-[0.12em] text-white"
+              className="font-display mt-5 text-3xl uppercase tracking-[0.08em] text-white"
             >
               Advance {event.trackLabel}
             </h2>
             <p
               id={descriptionId}
-              className="mt-4 text-sm leading-6 text-[var(--color-text-muted)]"
+              className="mt-4 text-sm leading-7 text-[var(--color-text-muted)]"
             >
               Promote this track from {event.previousTourLabel} to {event.nextTourLabel}.
               The track resets to {event.nextRankName} so the new shield becomes the
               permanent prestige backdrop.
             </p>
 
-            <div className="mt-5 rounded-[1.4rem] border border-[var(--color-amber)]/20 bg-[rgba(245,166,35,0.08)] px-4 py-3 text-sm text-[var(--color-text)]">
+            <div className="service-well mt-5 px-4 py-3 text-sm text-[var(--color-text)]">
               {event.previousRankName} retires. {event.nextTourLabel} unlocks on
               confirm.
             </div>
@@ -100,7 +101,7 @@ export function TourAdvancePrompt({
               <div
                 role="status"
                 aria-live="polite"
-                className="mt-4 rounded-[1.2rem] border border-[var(--color-amber)]/30 bg-[rgba(245,166,35,0.1)] px-4 py-3 text-sm text-[var(--color-text)]"
+                className="service-frame mt-4 px-4 py-3 text-sm text-[var(--color-text)]"
               >
                 Reconnect to commit the Tour advancement write.
               </div>
@@ -109,7 +110,7 @@ export function TourAdvancePrompt({
             {error ? (
               <div
                 role="alert"
-                className="mt-4 rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+                className="service-frame mt-4 border-red-500/35 bg-[linear-gradient(180deg,rgba(76,15,15,0.46),rgba(21,8,8,0.42))] px-4 py-3 text-sm text-red-100"
               >
                 {error}
               </div>
@@ -119,7 +120,7 @@ export function TourAdvancePrompt({
               <button
                 type="button"
                 onClick={() => closePrompt('cancel')}
-                className="focus-shell flex-1 rounded-[1.2rem] border border-white/10 px-4 py-3 text-sm uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
+                className="focus-shell service-button-ghost flex-1 rounded-none px-4 py-3 text-sm uppercase tracking-[0.22em]"
               >
                 Later
               </button>
@@ -135,7 +136,7 @@ export function TourAdvancePrompt({
                   void onConfirm();
                 }}
                 disabled={isSubmitting || isOffline}
-                className="focus-shell flex-1 rounded-[1.2rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.14)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-amber)] disabled:opacity-60"
+                className="focus-shell service-button-amber flex-1 rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em]"
               >
                 {isSubmitting ? 'Advancing...' : 'Advance Tour'}
               </button>

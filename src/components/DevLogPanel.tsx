@@ -87,7 +87,7 @@ export function DevLogPanel() {
             totalEntries: entries.length,
           });
         }}
-        className="focus-shell fixed bottom-3 right-3 z-[60] rounded-full border border-[var(--color-steel)]/40 bg-[rgba(5,8,11,0.94)] px-4 py-2 text-[0.72rem] uppercase tracking-[0.24em] text-[var(--color-steel)] shadow-[0_12px_24px_rgba(0,0,0,0.35)] lg:top-4 lg:bottom-auto"
+        className="focus-shell fixed bottom-3 left-3 z-[60] rounded-full border border-[var(--color-steel)]/40 bg-[rgba(5,8,11,0.94)] px-3 py-2 text-[0.68rem] uppercase tracking-[0.24em] text-[var(--color-steel)] shadow-[0_12px_24px_rgba(0,0,0,0.35)] lg:bottom-auto lg:left-auto lg:right-4 lg:top-4 lg:px-4 lg:text-[0.72rem]"
         aria-expanded={isOpen}
         aria-controls="dev-log-panel"
       >

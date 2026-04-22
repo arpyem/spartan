@@ -3,7 +3,8 @@ import { createSignedInScenario, gotoApp } from './helpers';
 
 test('shows the offline banner on signed-in home surfaces when the browser goes offline', async ({ page }) => {
   await gotoApp(page, '/', createSignedInScenario());
-  await expect(page.getByRole('heading', { name: 'Field Deck' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
+  await expect(page.getByText('Field Deck')).toBeVisible();
 
   await page.context().setOffline(true);
   await page.evaluate(() => {

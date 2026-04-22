@@ -42,13 +42,15 @@ test('renders the home screen from seeded data and opens the info modal', async 
     }),
   );
 
-  await expect(page.getByRole('heading', { name: 'Field Deck' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
+  await expect(page.getByText('Field Deck')).toBeVisible();
   await expect(page.getByText('Cardio')).toBeVisible();
   await expect(page.getByText('Legs')).toBeVisible();
   await expect(page.getByText('Push')).toBeVisible();
   await expect(page.getByText('Pull')).toBeVisible();
   await expect(page.getByText('Core')).toBeVisible();
-  await expect(page.getByText(/Tour advancement available/i)).toBeVisible();
+  await expect(page.getByText(/Tour advancement available/i)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Legs/i })).toHaveAttribute('data-selected', 'true');
 
   await page.getByRole('button', { name: 'Open service record' }).click();
 

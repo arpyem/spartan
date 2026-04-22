@@ -234,7 +234,9 @@ describe('Plan 03 app flow', () => {
     setSetDocError(null);
     await user.click(retryButton);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Service Record/i }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(getStoredDoc(`users/${userModel.uid}`)?.exists).toBe(true);
   });
 
@@ -256,14 +258,19 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Field Deck/i)).toBeInTheDocument();
     expect(screen.getByText(/Double XP Active/i)).toBeInTheDocument();
     expect(screen.getByText(/Cardio/i)).toBeInTheDocument();
     expect(screen.getByText(/Legs/i)).toBeInTheDocument();
     expect(screen.getByText(/Push/i)).toBeInTheDocument();
     expect(screen.getByText(/Pull/i)).toBeInTheDocument();
     expect(screen.getByText(/Core/i)).toBeInTheDocument();
-    expect(screen.getByText(/Tour advancement available/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/EXP to next rank/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Tour advancement available/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Service Tour/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Open service record/i }));
     expect(await screen.findByText(/Spartan Details/i)).toBeInTheDocument();
@@ -316,7 +323,7 @@ describe('Plan 03 app flow', () => {
       emitAuthState(user);
     });
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
   });
 
   it('updates the home screen when realtime user data changes after mount', async () => {
@@ -328,8 +335,8 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Tour advancement available/i)).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cardio/i })).toHaveAttribute('data-selected', 'false');
 
     await act(async () => {
       emitDocSnapshot(`users/${userModel.uid}`, {
@@ -347,7 +354,7 @@ describe('Plan 03 app flow', () => {
       });
     });
 
-    expect(await screen.findByText(/Tour advancement available/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cardio/i })).toHaveAttribute('data-selected', 'true');
   });
 
   it('keeps the home screen visible and shows a sync warning after a later snapshot failure', async () => {
@@ -357,13 +364,13 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
 
     await act(async () => {
       emitSnapshotError(`users/${userModel.uid}`, new Error('listener failed'));
     });
 
-    expect(screen.getByRole('heading', { name: /Field Deck/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
     expect(screen.getByText(/Live sync paused/i)).toBeInTheDocument();
   });
 
@@ -374,7 +381,7 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
 
     await act(async () => {
       setOnlineState(false);
@@ -387,7 +394,7 @@ describe('Plan 03 app flow', () => {
     ).toBeInTheDocument();
   });
 
-  it('updates the log preview live and shows a rank-up modal after submit', async () => {
+  it('shows a rank-up modal after submit and returns home when the ceremony is dismissed', async () => {
     const userModel = seedSignedInState(createMockUser(), {
       cardio: { xp: 1, tour: 1 },
     });
@@ -402,12 +409,41 @@ describe('Plan 03 app flow', () => {
     const valueInput = screen.getByLabelText(/Enter minutes/i);
     await user.type(valueInput, '10');
 
-    expect(screen.getByText(/^1 EXP$/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Log It/i }));
 
     expect(screen.getByRole('heading', { name: /^Apprentice$/i })).toBeInTheDocument();
     expect(screen.getByText(/Cardio advanced from Recruit/i)).toBeInTheDocument();
     expect(getCommittedBatches()).toHaveLength(1);
+    await user.click(screen.getByRole('heading', { name: /^Apprentice$/i }));
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+  });
+
+  it('stores a selected preset in the legacy note field without showing a workout note input', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
+    expect(screen.queryByLabelText(/Workout note/i)).not.toBeInTheDocument();
+
+    const runPreset = screen.getByRole('button', { name: /^Run$/i });
+    await user.click(runPreset);
+    expect(runPreset).toHaveAttribute('aria-pressed', 'true');
+    await user.click(runPreset);
+    expect(runPreset).toHaveAttribute('aria-pressed', 'false');
+    await user.click(runPreset);
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    const workoutWrite = getCommittedBatches()[0]?.find((operation) => operation.type === 'set');
+    expect(workoutWrite?.data).toMatchObject({
+      note: 'preset:cardio:run',
+    });
   });
 
   it('keeps the typed workout input and surfaces an inline alert when the write fails', async () => {
@@ -485,9 +521,11 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByText(/Tour Advanced/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Tour 2$/i })).toBeInTheDocument();
     expect(screen.getByText(/Cardio reset to Recruit/i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByText(/Recruit \| Tour 2/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/Tap anywhere to continue/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByText(/Tour Advanced/i));
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
   });
 
   it('keeps the Tour confirmation prompt open when the advancement write fails', async () => {
@@ -513,6 +551,26 @@ describe('Plan 03 app flow', () => {
     expect(screen.queryByText(/Tour Advanced/i)).not.toBeInTheDocument();
   });
 
+  it('returns home when Tour advancement is deferred', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1999, tour: 1 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    expect(await screen.findByText(/Advance Cardio/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Later/i }));
+
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+  });
+
   it('records auth and bootstrap lifecycle events in the dev log buffer', async () => {
     const userModel = seedSignedInState(createMockUser({ uid: 'log-auth-user' }));
     seedCollection(`users/${userModel.uid}/workouts`, []);
@@ -520,7 +578,7 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
 
     expect(getDevLogEvents()).toEqual(
       expect.arrayContaining([
@@ -539,7 +597,7 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Field Deck/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
 
     await act(async () => {
       setOnlineState(false);
@@ -578,12 +636,19 @@ describe('Plan 03 app flow', () => {
     await user.click(screen.getByRole('button', { name: /Advance Tour/i }));
 
     expect(await screen.findByText(/Tour Advanced/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Tap anywhere to continue/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByText(/Tour Advanced/i));
+    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
     expect(getDevLogEvents()).toEqual(
       expect.arrayContaining([
         'tour_prompt_confirmed',
         'tour_advance_started',
         'tour_advance_succeeded',
         'tour_modal_opened',
+        'tour_modal_closed',
+        'post_log_return_home_started',
       ]),
     );
   });

@@ -20,62 +20,57 @@ export function XPBar({
   const reduceMotion = useReducedMotion() || readReducedMotionPreference();
   const normalizedProgress = Math.max(0, Math.min(100, progress));
   const fillClassName = doubleXPActive
-    ? 'from-[var(--color-amber)] via-[#ffe086] to-[#f7b733]'
-    : 'from-[var(--color-hud)] via-[#6bff93] to-[#11d76b]';
-  const edgeGlowClassName = doubleXPActive ? 'bg-[#ffe5a3]/75' : 'bg-[#d8ffe7]/75';
+    ? 'from-[#f4c37f] via-[#d9863b] to-[#8b4e1b]'
+    : 'from-[#bfcde0] via-[#7f9bc2] to-[#39557f]';
 
   return (
     <div className="space-y-2" aria-live={label ? 'polite' : undefined}>
       {label ? (
-        <div className="flex items-center justify-between text-[0.68rem] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
+        <div className="flex items-center justify-between text-[0.66rem] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
           <span>{label}</span>
           <span>{normalizedProgress}%</span>
         </div>
       ) : null}
       <div
-        className="relative h-3.5 overflow-hidden rounded-full border border-white/10 bg-black/40"
+        className="relative h-3 overflow-hidden border border-[var(--color-panel-border)] bg-[rgba(4,10,19,0.8)]"
         data-testid="xp-bar"
         data-double-xp={doubleXPActive ? 'true' : 'false'}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),transparent_45%,rgba(255,255,255,0.06)_100%)]" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-[1px] bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent_28%,rgba(255,255,255,0.04)_100%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.14]"
+          style={{
+            background:
+              'repeating-linear-gradient(90deg, rgba(255,255,255,0.6) 0, rgba(255,255,255,0.6) 1px, transparent 1px, transparent 10px)',
+          }}
+        />
         <motion.div
-          className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${fillClassName}`}
-          animate={{ width: `${normalizedProgress}%` }}
+          data-testid="xp-bar-fill"
+          className={`absolute inset-y-[1px] left-[1px] bg-gradient-to-r ${fillClassName}`}
+          animate={{ width: `calc(${normalizedProgress}% - 2px)` }}
           transition={
             reduceMotion
               ? { duration: 0.2, ease: 'easeOut' }
-              : { type: 'spring', stiffness: 60, damping: 12, mass: 1.2 }
+              : { type: 'spring', stiffness: 70, damping: 16, mass: 1.1 }
           }
           style={{
             boxShadow: doubleXPActive
-              ? '0 0 18px rgba(245, 166, 35, 0.42)'
-              : '0 0 16px rgba(0, 255, 65, 0.32)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
-          style={{
-            background:
-              'repeating-linear-gradient(180deg, rgba(255,255,255,0.9) 0, rgba(255,255,255,0.9) 1px, transparent 1px, transparent 4px)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-35"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 26%, rgba(255,255,255,0.04) 100%)',
+              ? '0 0 16px rgba(217, 134, 59, 0.32)'
+              : '0 0 14px rgba(151, 177, 216, 0.24)',
           }}
         />
         <motion.div
           aria-hidden="true"
-          className={`absolute inset-y-[2px] w-6 rounded-full ${edgeGlowClassName} blur-md`}
-          animate={{ left: `calc(${normalizedProgress}% - 0.75rem)` }}
+          className="absolute inset-y-[1px] w-6 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.48),transparent)] opacity-70"
+          animate={{ left: `calc(${normalizedProgress}% - 0.9rem)` }}
           transition={
             reduceMotion
               ? { duration: 0.18, ease: 'easeOut' }
-              : { type: 'spring', stiffness: 60, damping: 14, mass: 1 }
+              : { type: 'spring', stiffness: 72, damping: 17, mass: 1 }
           }
         />
       </div>

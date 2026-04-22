@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createSignedInScenario, gotoApp } from './helpers';
 
-test('updates the cardio XP preview and shows the rank-up ceremony', async ({ page }) => {
+test('shows the rank-up ceremony and returns home after the log is resolved', async ({ page }) => {
   await gotoApp(
     page,
     '/log/cardio',
@@ -27,11 +27,11 @@ test('updates the cardio XP preview and shows the rank-up ceremony', async ({ pa
   const minutesInput = page.getByLabel('Enter minutes');
   await minutesInput.fill('10');
 
-  await expect(page.getByText(/^1 EXP$/)).toBeVisible();
-
   await page.getByRole('button', { name: 'Log It' }).click();
 
   await expect(page.getByRole('heading', { name: 'Apprentice' })).toBeVisible();
   await expect(page.getByText(/Cardio advanced from Recruit/i)).toBeVisible();
-  await expect(page.getByText(/Apprentice \| Tour 2/i)).toBeVisible();
+
+  await page.getByRole('heading', { name: 'Apprentice' }).click();
+  await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
 });

@@ -18,6 +18,7 @@ function readReducedMotionPreference() {
 
 export function RankUpModal({ event, onClose }: RankUpModalProps) {
   const reduceMotion = useReducedMotion() || readReducedMotionPreference();
+
   useEffect(() => {
     if (event) {
       devLog.info('modal', 'rank_up_modal_opened', {
@@ -51,7 +52,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
     <AnimatePresence>
       {event ? (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[rgba(7,9,11,0.86)] px-4 text-left backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[rgba(2,5,10,0.88)] px-4 text-left backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -69,11 +70,11 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
           />
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.9)_0%,rgba(245,166,35,0.7)_22%,rgba(245,166,35,0)_55%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.88)_0%,rgba(191,215,255,0.5)_24%,rgba(0,0,0,0)_58%)]"
             initial={{ opacity: 0 }}
-            animate={{ opacity: reduceMotion ? [0, 0.28, 0] : [0, 0.8, 0] }}
+            animate={{ opacity: reduceMotion ? [0, 0.22, 0] : [0, 0.55, 0] }}
             transition={{
-              duration: reduceMotion ? 0.2 : 0.38,
+              duration: reduceMotion ? 0.22 : 0.38,
               times: [0, 0.2, 1],
             }}
           />
@@ -86,28 +87,25 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             tabIndex={-1}
-            className="panel relative w-full max-w-sm overflow-hidden rounded-[2rem] border-[rgba(245,166,35,0.25)] bg-[linear-gradient(180deg,rgba(28,18,8,0.96),rgba(10,12,15,0.95))] px-6 py-8 text-center"
+            className="service-frame relative w-full max-w-xl overflow-hidden px-6 py-8 text-center"
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ duration: 0.28, ease: 'easeOut' }}
           >
-            <motion.div
-              aria-hidden="true"
-              className="absolute inset-x-6 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,240,170,0.95),transparent)]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.12, duration: 0.18 }}
-            />
+            <div className="service-strip">
+              <span className="service-label">Promotion confirmed</span>
+              <span className="service-label">{event.trackLabel}</span>
+            </div>
 
-            <div className="relative flex justify-center">
+            <div className="relative mt-8 flex justify-center">
               <motion.div
                 aria-hidden="true"
-                className="absolute h-36 w-36 rounded-full border border-[rgba(255,240,170,0.38)]"
+                className="absolute h-40 w-40 border border-[rgba(210,226,251,0.35)]"
                 initial={{ opacity: 0, scale: 0.7 }}
                 animate={{
-                  opacity: reduceMotion ? [0, 0.5, 0] : [0, 0.95, 0],
-                  scale: reduceMotion ? [0.92, 1.05, 1.12] : [0.7, 1.18, 1.48],
+                  opacity: reduceMotion ? [0, 0.42, 0] : [0, 0.75, 0],
+                  scale: reduceMotion ? [0.92, 1.04, 1.1] : [0.7, 1.2, 1.45],
                 }}
                 transition={{
                   delay: reduceMotion ? 0.08 : 0.32,
@@ -127,7 +125,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
                   ease: 'easeOut',
                 }}
               >
-                <RankEmblem rankId={event.nextRankId} tour={event.tour} size={126} />
+                <RankEmblem rankId={event.nextRankId} tour={event.tour} size={132} />
               </motion.div>
             </div>
 
@@ -135,7 +133,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
               {'RANK UP'.split('').map((character, index) => (
                 <motion.span
                   key={`${character}-${index}`}
-                  className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-[var(--color-amber)]"
+                  className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-[#d1deef]"
                   initial={{ opacity: 0, y: 10, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: 0.32 + index * 0.035, duration: 0.2, ease: 'easeOut' }}
@@ -147,7 +145,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
 
             <motion.h2
               id={titleId}
-              className="font-display mt-3 text-3xl font-bold tracking-[0.12em] text-white"
+              className="font-display mt-3 text-3xl uppercase tracking-[0.08em] text-white"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -172,7 +170,7 @@ export function RankUpModal({ event, onClose }: RankUpModalProps) {
               {event.trackLabel} advanced from {event.previousRankName}.
             </motion.p>
             <motion.p
-              className="mt-5 font-hud text-[0.68rem] uppercase tracking-[0.28em] text-[rgba(255,240,190,0.78)]"
+              className="mt-5 text-[0.68rem] uppercase tracking-[0.24em] text-[var(--color-text-dim)]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: reduceMotion ? 0.2 : 1, duration: 0.2 }}

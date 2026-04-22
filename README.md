@@ -7,9 +7,9 @@ Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across 
 - Plan 02 is complete: rank math, XP rules, deterministic Double XP state, Firestore write contracts, auth bootstrap helpers, and real-time hook boundaries are now implemented and tested.
 - Plan 03 is complete: Google redirect auth, live home and log screens, real-time workout aggregates, info modal data, and rank-up/Tour prompt plumbing are now implemented and tested.
 - Plan 04 is complete: the app now has production-facing emblem/shield compositions, weighted XP bar treatment, a dedicated Tour confirmation prompt, and distinct rank-up/Tour celebration ceremonies.
-- Plan 05 is active: offline-aware UX, stale-data handling, modal accessibility, reduced-motion support, split production bundles, hosting config, release documentation, and Playwright mobile smoke coverage are now implemented.
+- Plan 05 is active: offline-aware UX, stale-data handling, modal accessibility, reduced-motion support, split production bundles, hosting config, release documentation, Playwright mobile smoke coverage, the Halo 3 service-record visual fidelity reskin, and the latest home/log UX refinement pass are now implemented.
 - Plan 06 is complete: setup review remediation now hardens first-sign-in profile bootstrap retries and keeps rank-up ceremonies aligned with the active Tour shield.
-- The current app now includes the full progression ceremony loop plus release-hardening code. The remaining work is the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md), especially 390px/mobile QA, offline shell verification, and final installability review.
+- The current app now includes the full progression ceremony loop, the Halo 3 service-record visual treatment, automatic return-home after resolved log flows, compact Halo-style track cards, and release-hardening code. The remaining work is the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md), especially 390px/mobile QA, offline shell verification, and final installability review.
 
 ## Repo Structure
 - `src/lib`
@@ -113,7 +113,7 @@ This table is the project-level status source for the implementation plans.
 | [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md) | Rank logic, XP economy, Firestore model, auth bootstrap, atomic write flows | Complete |
 | [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Complete |
 | [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Complete |
-| [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, Playwright smoke coverage, offline UX, accessibility, PWA completion, release readiness | Active |
+| [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, Playwright smoke coverage, offline UX, accessibility, Halo 3 visual fidelity, home/log UX refinement, PWA completion, release readiness | Active |
 | [06 Setup Review Remediation](/C:/Users/rpmmi/Documents/spartan/plans/06-setup-review-remediation.md) | Bootstrap retry hardening, Tour-correct rank-up ceremony state, review follow-up tests/docs | Complete |
 
 Status meanings:

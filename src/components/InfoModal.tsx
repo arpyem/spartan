@@ -1,4 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { RankEmblem } from '@/components/RankEmblem';
+import { TrackBadge } from '@/components/TrackBadge';
 import { useDialogSurface } from '@/hooks/useDialogSurface';
 import { RANKS } from '@/lib/ranks';
 import { TRACKS } from '@/lib/tracks';
@@ -59,7 +61,7 @@ export function InfoModal({
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-40 flex items-end bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-[rgba(2,4,8,0.84)] p-3 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -73,19 +75,19 @@ export function InfoModal({
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             tabIndex={-1}
-            className="panel max-h-[88vh] w-full overflow-y-auto rounded-[1.8rem] p-5"
-            initial={{ y: 32, opacity: 0 }}
+            className="service-frame mx-auto flex max-h-[100%] w-full max-w-5xl flex-col overflow-hidden"
+            initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 32, opacity: 0 }}
+            exit={{ y: 16, opacity: 0 }}
             transition={{ duration: 0.24, ease: 'easeOut' }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="service-strip">
               <div>
-                <p className="hud-kicker font-hud text-[0.65rem]">Service record</p>
+                <p className="service-label">Service record</p>
                 <h2
                   id={titleId}
-                  className="font-display mt-2 text-2xl font-bold tracking-[0.12em] text-white"
+                  className="font-display mt-1 text-xl uppercase tracking-[0.08em] text-white"
                 >
                   Spartan Details
                 </h2>
@@ -93,165 +95,167 @@ export function InfoModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="focus-shell rounded-full border border-white/10 px-3 py-2 text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
+                className="focus-shell service-button-ghost rounded-none px-3 py-2 text-xs uppercase tracking-[0.22em]"
               >
                 Close
               </button>
             </div>
 
-            <div className="mt-6 space-y-6">
-              <section id={descriptionId} className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Account
-                </h3>
-                <div className="flex items-center gap-4 rounded-[1.4rem] border border-white/8 bg-black/25 p-4">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt=""
-                      className="h-14 w-14 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/35 text-xl text-[var(--color-hud)]">
-                      {user.displayName.slice(0, 1) || 'S'}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-display text-base font-semibold tracking-[0.06em] text-white">
-                      {user.displayName || 'Spartan'}
-                    </p>
-                    <p className="mt-1 break-all text-sm text-[var(--color-text-muted)]">
-                      {user.email || 'No email available'}
-                    </p>
-                    <p className="mt-1 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-steel)]">
-                      Member since {formatDate(user.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Your stats
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.4rem] border border-white/8 bg-black/25 p-4">
-                    <p className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                      Total workouts
-                    </p>
-                    <p className="mt-2 font-display text-3xl font-semibold text-white">
-                      {stats.totalWorkouts}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] border border-white/8 bg-black/25 p-4">
-                    <p className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                      Total EXP earned
-                    </p>
-                    <p className="mt-2 font-display text-3xl font-semibold text-white">
-                      {stats.totalXp}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2 rounded-[1.4rem] border border-white/8 bg-black/25 p-4">
-                  {TRACKS.map((track) => {
-                    const trackStats = stats.byTrack[track.key];
-                    const valueLabel = track.key === 'cardio' ? 'minutes' : 'sets';
-
-                    return (
-                      <div
-                        key={track.key}
-                        className="flex items-center justify-between gap-4 text-sm"
-                      >
-                        <span className="text-white">{track.label}</span>
-                        <span className="text-right text-[var(--color-text-muted)]">
-                          {trackStats.workouts} sessions | {trackStats.totalValue} {valueLabel}
-                        </span>
+            <div className="grid min-h-0 flex-1 gap-0 md:grid-cols-[1.1fr,0.9fr]">
+              <div className="min-h-0 overflow-y-auto p-5">
+                <div id={descriptionId} className="space-y-6">
+                  <section className="space-y-3">
+                    <p className="service-label">Account</p>
+                    <div className="service-well p-4">
+                      <div className="flex items-center gap-4">
+                        {user.photoURL ? (
+                          <img
+                            src={user.photoURL}
+                            alt=""
+                            className="h-16 w-16 border border-[var(--color-panel-border)] object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-16 w-16 items-center justify-center border border-[var(--color-panel-border)] bg-[rgba(4,9,18,0.7)] text-xl text-white">
+                            {user.displayName.slice(0, 1) || 'S'}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-display text-xl uppercase tracking-[0.06em] text-white">
+                            {user.displayName || 'Spartan'}
+                          </p>
+                          <p className="mt-1 break-all text-sm text-[var(--color-text-muted)]">
+                            {user.email || 'No email available'}
+                          </p>
+                          <p className="mt-1 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
+                            Member since {formatDate(user.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
+                    </div>
+                  </section>
 
-              <section className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Tour status
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {TRACKS.map((track) => (
-                    <div
-                      key={track.key}
-                      className="rounded-[1.4rem] border border-white/8 bg-black/25 p-4"
-                    >
-                      <p className="text-sm text-white">{track.label}</p>
-                      <p className="mt-1 text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                        Tour {tracks[track.key].tour}
+                  <section className="space-y-3">
+                    <p className="service-label">Your stats</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="service-well p-4">
+                        <p className="service-label">Total workouts</p>
+                        <p className="mt-2 font-display text-3xl uppercase text-white">
+                          {stats.totalWorkouts}
+                        </p>
+                      </div>
+                      <div className="service-well p-4">
+                        <p className="service-label">Total EXP earned</p>
+                        <p className="mt-2 font-display text-3xl uppercase text-white">
+                          {stats.totalXp}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="service-well p-4">
+                      <div className="space-y-3">
+                        {TRACKS.map((track) => {
+                          const trackStats = stats.byTrack[track.key];
+                          const valueLabel = track.key === 'cardio' ? 'minutes' : 'sets';
+
+                          return (
+                            <div
+                              key={track.key}
+                              className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] pb-3 last:border-b-0 last:pb-0"
+                            >
+                              <div className="flex items-center gap-3">
+                                <TrackBadge badgeKey={track.badgeKey} size={34} />
+                                <span className="text-sm text-white">{track.label}</span>
+                              </div>
+                              <span className="text-right text-[0.8rem] text-[var(--color-text-muted)]">
+                                {trackStats.workouts} sessions | {trackStats.totalValue} {valueLabel}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <p className="service-label">Tour status</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {TRACKS.map((track) => (
+                        <div
+                          key={track.key}
+                          className="service-well flex items-center justify-between gap-3 p-4"
+                        >
+                          <div className="flex items-center gap-3">
+                            <TrackBadge badgeKey={track.badgeKey} size={34} />
+                            <span className="text-sm text-white">{track.label}</span>
+                          </div>
+                          <span className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+                            Tour {tracks[track.key].tour}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <p className="service-label">Double XP</p>
+                    <div className="service-well p-4 text-sm leading-6 text-[var(--color-text-muted)]">
+                      <p>Every fifth week runs a Double XP weekend from Friday through Sunday.</p>
+                      <p className="mt-2 text-white">
+                        Current status:{' '}
+                        {doubleXPStatus.active
+                          ? 'Active now'
+                          : doubleXPStatus.upcoming
+                            ? 'Starts this weekend'
+                            : 'Normal XP window'}
                       </p>
                     </div>
-                  ))}
-                </div>
-              </section>
+                  </section>
 
-              <section className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Full rank table
-                </h3>
-                <div className="max-h-64 overflow-y-auto rounded-[1.4rem] border border-white/8 bg-black/25">
-                  {RANKS.map((rank) => (
-                    <div
-                      key={rank.id}
-                      className={`flex items-center justify-between gap-4 px-4 py-3 text-sm ${
-                        rank.id === globalRankId
-                          ? 'bg-[rgba(0,255,65,0.14)] text-white'
-                          : 'text-[var(--color-text-muted)]'
-                      }`}
+                  <section className="space-y-3">
+                    <p className="service-label">Sign out</p>
+                    {error ? (
+                      <div
+                        role="alert"
+                        className="service-frame border-red-500/35 bg-[linear-gradient(180deg,rgba(76,15,15,0.46),rgba(21,8,8,0.42))] px-4 py-3 text-sm text-red-100"
+                      >
+                        {error}
+                      </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => void onSignOut()}
+                      disabled={isSigningOut}
+                      className="focus-shell service-button-amber w-full rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em]"
                     >
-                      <span>{rank.name}</span>
-                      <span>{rank.xpRequired} EXP</span>
+                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                    </button>
+                  </section>
+                </div>
+              </div>
+
+              <div className="flex min-h-0 flex-col border-t border-[var(--color-divider)] md:border-l md:border-t-0">
+                <div className="service-art-panel m-5 mb-0 flex-1" />
+                <div className="min-h-0 overflow-y-auto p-5">
+                  <section className="space-y-3">
+                    <p className="service-label">Full rank table</p>
+                    <div className="service-well max-h-[26rem] overflow-y-auto">
+                      {RANKS.map((rank) => (
+                        <div
+                          key={rank.id}
+                          className={`grid grid-cols-[1fr,auto,auto] items-center gap-3 border-b border-[var(--color-divider)] px-4 py-3 text-sm last:border-b-0 ${
+                            rank.id === globalRankId
+                              ? 'bg-[linear-gradient(90deg,rgba(217,134,59,0.18),rgba(10,18,31,0.1))] text-white'
+                              : 'text-[var(--color-text-muted)]'
+                          }`}
+                        >
+                          <span>{rank.name}</span>
+                          <RankEmblem rankId={rank.id} tour={1} size={28} />
+                          <span>{rank.xpRequired} EXP</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </section>
                 </div>
-              </section>
-
-              <section className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Double XP
-                </h3>
-                <div className="rounded-[1.4rem] border border-white/8 bg-black/25 p-4 text-sm leading-6 text-[var(--color-text-muted)]">
-                  <p>
-                    Every fifth week runs a Double XP weekend from Friday through Sunday.
-                  </p>
-                  <p className="mt-2 text-white">
-                    Current status:{' '}
-                    {doubleXPStatus.active
-                      ? 'Active now'
-                      : doubleXPStatus.upcoming
-                        ? 'Starts this weekend'
-                        : 'Normal XP window'}
-                  </p>
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.24em] text-white">
-                  Sign out
-                </h3>
-                {error ? (
-                  <div
-                    role="alert"
-                    className="rounded-[1.2rem] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
-                  >
-                    {error}
-                  </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void onSignOut()}
-                  disabled={isSigningOut}
-                  className="focus-shell w-full rounded-[1.2rem] border border-[var(--color-amber)]/40 bg-[rgba(245,166,35,0.12)] px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-amber)] disabled:opacity-60"
-                >
-                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
-                </button>
-              </section>
+              </div>
             </div>
           </motion.section>
         </motion.div>

@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 export function RootLayout() {
   return (
     <div className="app-shell">
-      <div className="mobile-frame">
+      <div className="mobile-frame service-shell">
         <main className="relative z-10">
           <Outlet />
         </main>

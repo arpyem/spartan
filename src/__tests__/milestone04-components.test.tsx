@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { InfoModal } from '@/components/InfoModal';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
+import { TrackBadge } from '@/components/TrackBadge';
 import { TourModal } from '@/components/TourModal';
 import { XPBar } from '@/components/XPBar';
 import type { RankUpEvent, TourAdvanceEvent, UserDoc, WorkoutStats } from '@/lib/types';
@@ -92,6 +93,13 @@ describe('Milestone 04 components', () => {
 
     expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-shield', 'on');
     expect(container.querySelector('text')).toBeNull();
+  });
+
+  it('renders local SVG track badges instead of emoji icons', () => {
+    render(<TrackBadge badgeKey="cardio" size={48} />);
+
+    expect(screen.getByTestId('track-badge-cardio')).toBeInTheDocument();
+    expect(screen.queryByText('🫀')).not.toBeInTheDocument();
   });
 
   it('updates the XP bar and switches styling for Double XP', async () => {
