@@ -143,13 +143,13 @@ export function GlobalRank({
           ) : null}
         </div>
       </div>
-      <div className="mt-4 flex min-h-[15rem] flex-col justify-between gap-4 lg:min-h-[24rem]">
-        <div className="service-global-rank-stage flex flex-1 items-center justify-center">
+      <div className="mt-4 flex min-h-[22rem] flex-col justify-between gap-4 lg:min-h-[31rem]">
+        <div className="service-global-rank-stage flex min-h-[16rem] flex-1 items-center justify-center overflow-visible lg:min-h-[23rem]">
           <div className="lg:hidden">
-            <RankEmblem rankId={rankId} tour={1} size={128} />
+            <RankEmblem rankId={rankId} tour={1} size={256} />
           </div>
           <div className="hidden lg:block">
-            <RankEmblem rankId={rankId} tour={1} size={182} />
+            <RankEmblem rankId={rankId} tour={1} size={364} />
           </div>
         </div>
         <div className="space-y-3 border-t border-[var(--color-divider)] pt-3">

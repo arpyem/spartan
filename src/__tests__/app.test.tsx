@@ -415,6 +415,10 @@ describe('Plan 03 app flow', () => {
     render(<App />);
 
     expect(await screen.findByText(/^Cardio$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Training track/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Recruit$/i)).toBeInTheDocument();
+    expect(screen.getByText('1 EXP')).toBeInTheDocument();
+    expect(screen.getByText('50%')).toBeInTheDocument();
     const valueInput = screen.getByLabelText(/Enter minutes/i);
     await user.type(valueInput, '10');
 
@@ -427,7 +431,7 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
   });
 
-  it('stores a selected preset in the legacy note field without showing a workout note input', async () => {
+  it('stores workout notes from the free-text field on submit', async () => {
     const userModel = seedSignedInState(createMockUser(), {
       cardio: { xp: 1, tour: 1 },
     });
@@ -439,19 +443,14 @@ describe('Plan 03 app flow', () => {
     render(<App />);
 
     await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
-    expect(screen.queryByLabelText(/Workout note/i)).not.toBeInTheDocument();
-
-    const runPreset = screen.getByRole('button', { name: /^Run$/i });
-    await user.click(runPreset);
-    expect(runPreset).toHaveAttribute('aria-pressed', 'true');
-    await user.click(runPreset);
-    expect(runPreset).toHaveAttribute('aria-pressed', 'false');
-    await user.click(runPreset);
+    const noteInput = screen.getByLabelText(/Workout notes/i);
+    expect(screen.queryByText(/Optional subtrack/i)).not.toBeInTheDocument();
+    await user.type(noteInput, 'Felt sharp on intervals');
     await user.click(screen.getByRole('button', { name: /Log It/i }));
 
     const workoutWrite = getCommittedBatches()[0]?.find((operation) => operation.type === 'set');
     expect(workoutWrite?.data).toMatchObject({
-      note: 'preset:cardio:run',
+      note: 'Felt sharp on intervals',
     });
   });
 

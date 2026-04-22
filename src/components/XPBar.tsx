@@ -88,16 +88,6 @@ export function XPBar({
             opacity: 0.7,
           }}
         />
-        <motion.div
-          aria-hidden="true"
-          className={`absolute inset-y-[1px] ${compact ? 'w-4' : 'w-6'} bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.52),transparent)] opacity-80`}
-          animate={{ left: normalizedProgress === 0 ? '0%' : `calc(${normalizedProgress}% - 0.9rem)` }}
-          transition={
-            reduceMotion
-              ? { duration: 0.18, ease: 'easeOut' }
-              : { type: 'spring', stiffness: 72, damping: 17, mass: 1 }
-          }
-        />
       </div>
     </div>
   );

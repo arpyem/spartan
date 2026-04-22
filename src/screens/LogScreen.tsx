@@ -4,7 +4,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RankEmblem } from '@/components/RankEmblem';
 import { RankUpModal } from '@/components/RankUpModal';
 import { StatusBanner } from '@/components/StatusBanner';
-import { SubtrackPresetIcon } from '@/components/SubtrackPresetIcon';
 import { TourAdvancePrompt } from '@/components/TourAdvancePrompt';
 import { TourModal } from '@/components/TourModal';
 import { TrackBadge } from '@/components/TrackBadge';
@@ -45,10 +44,6 @@ function buildAdjustmentSteps(trackKey: TrackKey) {
   return trackKey === 'cardio' ? [-10, -5, 5, 10] : [-5, -1, 1, 5];
 }
 
-function buildPresetNote(trackKey: TrackKey, presetKey: string | null) {
-  return presetKey ? `preset:${trackKey}:${presetKey}` : '';
-}
-
 export function LogScreen() {
   const appRuntime = getAppRuntime();
   const navigate = useNavigate();
@@ -58,7 +53,7 @@ export function LogScreen() {
   const doubleXpStatus = useDoubleXP();
   const userData = useUserData(user?.uid);
   const [value, setValue] = useState('');
-  const [selectedPresetKey, setSelectedPresetKey] = useState<string | null>(null);
+  const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancingTour, setIsAdvancingTour] = useState(false);
   const [rankUpEvent, setRankUpEvent] = useState<RankUpEvent | null>(null);
@@ -80,7 +75,7 @@ export function LogScreen() {
   const adjustmentSteps = trackKey ? buildAdjustmentSteps(trackKey) : [];
   const numericValue = Number(value);
   const isValidValue = Number.isInteger(numericValue) && numericValue > 0;
-  const selectedPresetNote = trackKey ? buildPresetNote(trackKey, selectedPresetKey) : '';
+  const trimmedNote = note.trim();
   const preview = trackKey && isValidValue
     ? {
         baseXp: getBaseXP(trackKey, numericValue),
@@ -246,8 +241,7 @@ export function LogScreen() {
     devLog.info('write', 'log_workout_started', {
       track: readyTrackKey,
       value: numericValue,
-      noteLength: selectedPresetNote.length,
-      presetKey: selectedPresetKey,
+      noteLength: trimmedNote.length,
       currentXp: readyCurrentTrack.xp,
       currentTour: readyCurrentTrack.tour,
     });
@@ -257,7 +251,7 @@ export function LogScreen() {
         uid: readySignedInUser.uid,
         track: readyTrackKey,
         value: numericValue,
-        note: selectedPresetNote,
+        note: trimmedNote,
         currentTrack: readyCurrentTrack,
       });
 
@@ -304,7 +298,7 @@ export function LogScreen() {
       }
 
       setValue('');
-      setSelectedPresetKey(null);
+      setNote('');
 
       if (result.tourAdvanceAvailable) {
         setReturnHomeMode('tour');
@@ -392,27 +386,36 @@ export function LogScreen() {
               Return home
             </Link>
           </div>
-          <div className="mt-5 grid gap-5 sm:grid-cols-[auto,1fr,auto] sm:items-center">
-            <TrackBadge badgeKey={readyTrackMeta.badgeKey} size={62} />
-            <div>
-              <h2 className="font-display text-3xl uppercase tracking-[0.08em] text-white">
-                {readyTrackMeta.label}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--color-text-muted)]">{readyCurrentRank.name}</p>
-              <p className="mt-2 text-[0.68rem] uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
+          <div className="service-row service-track-card service-selection-glow mt-5 px-4 py-3.5 sm:px-5 sm:py-4">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 text-center">
+                <TrackBadge badgeKey={readyTrackMeta.badgeKey} size={30} variant="glyph" />
+                <h2 className="font-display text-[1.8rem] uppercase tracking-[0.08em] text-white sm:text-[2rem]">
+                  {readyTrackMeta.label}
+                </h2>
+              </div>
+              <div className="service-track-card-stage flex min-h-[7.2rem] w-full max-w-[10rem] items-center justify-center overflow-visible sm:min-h-[8rem] sm:max-w-[10.5rem]">
+                <RankEmblem rankId={readyCurrentRank.id} tour={readyCurrentTrack.tour} size={96} />
+              </div>
+              <div className="mx-auto flex w-full max-w-[15rem] flex-col gap-2 text-center">
+                <div className="space-y-1.5">
+                  <p className="font-display text-[0.82rem] uppercase leading-[1.12] tracking-[0.05em] text-[rgba(214,225,244,0.82)]">
+                    {readyCurrentRank.name}
+                  </p>
+                  <div className="flex items-center justify-between gap-3 text-[0.62rem] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                    <span>{readyCurrentTrack.xp} EXP</span>
+                    <span>{currentProgress}%</span>
+                  </div>
+                </div>
+                <XPBar
+                  progress={currentProgress}
+                  doubleXPActive={doubleXpStatus.active}
+                />
+              </div>
+              <p className="text-[0.68rem] uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
                 {xpToNextRank === null ? 'Max rank achieved' : `${xpToNextRank} EXP to next rank`}
               </p>
             </div>
-            <div className="flex justify-end">
-              <RankEmblem rankId={readyCurrentRank.id} tour={readyCurrentTrack.tour} size={82} />
-            </div>
-          </div>
-          <div className="mt-5">
-            <XPBar
-              progress={currentProgress}
-              doubleXPActive={doubleXpStatus.active}
-              label={`${readyCurrentTrack.xp} total EXP`}
-            />
           </div>
         </div>
 
@@ -428,24 +431,22 @@ export function LogScreen() {
           <label htmlFor="track-value" className="service-label">
             Enter {unitLabel}
           </label>
-          <div className="mt-4 grid grid-cols-[minmax(0,1fr),minmax(6rem,8.5rem),minmax(0,1fr)] items-center gap-2 sm:gap-3">
-            <div className="grid grid-cols-2 gap-2">
-              {adjustmentSteps
-                .filter((step) => step < 0)
-                .map((step) => (
-                  <button
-                    key={step}
-                    type="button"
-                    onClick={() =>
-                      setValue(String(Math.max(0, (Number(value) || 0) + step)))
-                    }
-                    className="focus-shell service-button h-14 rounded-none px-2 text-sm uppercase tracking-[0.16em]"
-                    aria-label={`Decrease ${unitLabel} by ${Math.abs(step)}`}
-                  >
-                    {step}
-                  </button>
-                ))}
-            </div>
+          <div className="mt-4 flex items-center gap-1.5 sm:gap-2">
+            {adjustmentSteps
+              .filter((step) => step < 0)
+              .map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() =>
+                    setValue(String(Math.max(0, (Number(value) || 0) + step)))
+                  }
+                  className="focus-shell service-button h-12 w-[2.8rem] shrink-0 rounded-none px-0 text-[0.7rem] uppercase tracking-[0.08em] sm:h-14 sm:w-[4.25rem] sm:text-sm sm:tracking-[0.16em]"
+                  aria-label={`Decrease ${unitLabel} by ${Math.abs(step)}`}
+                >
+                  {step}
+                </button>
+              ))}
             <input
               id="track-value"
               type="number"
@@ -454,57 +455,36 @@ export function LogScreen() {
               step={1}
               value={value}
               onChange={(nextEvent) => setValue(nextEvent.target.value)}
-              placeholder={`Enter ${unitLabel}`}
-              className="focus-shell h-14 min-w-0 border border-[var(--color-panel-border)] bg-[rgba(4,9,18,0.72)] px-4 text-center text-3xl text-white placeholder:text-[var(--color-text-dim)]"
+              placeholder="0"
+              className="focus-shell h-12 min-w-0 flex-1 border border-[var(--color-panel-border)] bg-[rgba(4,9,18,0.72)] px-2 text-center text-[1.7rem] text-white placeholder:text-[var(--color-text-dim)] sm:h-14 sm:px-4 sm:text-3xl"
             />
-            <div className="grid grid-cols-2 gap-2">
-              {adjustmentSteps
-                .filter((step) => step > 0)
-                .map((step) => (
-                  <button
-                    key={step}
-                    type="button"
-                    onClick={() => setValue(String((Number(value) || 0) + step))}
-                    className="focus-shell service-button h-14 rounded-none px-2 text-sm uppercase tracking-[0.16em]"
-                    aria-label={`Increase ${unitLabel} by ${step}`}
-                  >
-                    +{step}
-                  </button>
-                ))}
-            </div>
+            {adjustmentSteps
+              .filter((step) => step > 0)
+              .map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => setValue(String((Number(value) || 0) + step))}
+                  className="focus-shell service-button h-12 w-[2.8rem] shrink-0 rounded-none px-0 text-[0.7rem] uppercase tracking-[0.08em] sm:h-14 sm:w-[4.25rem] sm:text-sm sm:tracking-[0.16em]"
+                  aria-label={`Increase ${unitLabel} by ${step}`}
+                >
+                  +{step}
+                </button>
+              ))}
           </div>
 
           <div className="mt-5">
-            <p className="service-label">Optional subtrack</p>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {readyTrackMeta.presets.map((preset) => {
-                const isSelected = selectedPresetKey === preset.key;
-
-                return (
-                  <button
-                    key={preset.key}
-                    type="button"
-                    onClick={() =>
-                      setSelectedPresetKey((currentKey) =>
-                        currentKey === preset.key ? null : preset.key,
-                      )
-                    }
-                    className={`focus-shell service-well flex flex-col items-center gap-2 px-3 py-3 text-center ${
-                      isSelected
-                        ? 'border-[rgba(223,151,83,0.48)] bg-[linear-gradient(180deg,rgba(68,37,16,0.5),rgba(10,18,31,0.42))] text-white'
-                        : 'text-[var(--color-text-muted)]'
-                    }`}
-                    aria-pressed={isSelected}
-                    aria-label={`${preset.label}${isSelected ? ' selected' : ''}`}
-                  >
-                    <SubtrackPresetIcon presetKey={preset.key} />
-                    <span className="text-[0.66rem] uppercase tracking-[0.16em]">
-                      {preset.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <label htmlFor="workout-note" className="service-label">
+              Workout notes
+            </label>
+            <textarea
+              id="workout-note"
+              rows={4}
+              value={note}
+              onChange={(nextEvent) => setNote(nextEvent.target.value)}
+              placeholder="Optional notes about the session, pace, load, or effort."
+              className="focus-shell mt-3 min-h-[7rem] w-full resize-y border border-[var(--color-panel-border)] bg-[rgba(4,9,18,0.72)] px-4 py-3 text-sm leading-6 text-white placeholder:text-[var(--color-text-dim)]"
+            />
           </div>
 
           {submitError ? (
