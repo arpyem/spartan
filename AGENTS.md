@@ -395,6 +395,18 @@ npm run preview      # preview production build locally
 firebase deploy      # deploy to Firebase Hosting
 ```
 
+### Codex Windows Shell Notes
+
+When working from Codex on Windows, prefer `cmd /c npm ...` for repo commands. In PowerShell, plain `npm` may resolve to `npm.ps1` and fail under the default execution policy even when Node is installed correctly.
+
+Expected Node install path:
+- `C:\Program Files\nodejs\node.exe`
+- `C:\Program Files\nodejs\npm.cmd`
+
+If Node is newly installed and Codex still resolves the wrong binary, restart the session before debugging the repo.
+
+If `vite`, `vitest`, or `npm run build` fail with `spawn EPERM` from `esbuild` inside Codex, treat that as an execution-environment issue first. In this workspace, the reliable path is to rerun the command outside the sandbox with escalation rather than assuming the app code is broken.
+
 ---
 
 ## Environment Setup
