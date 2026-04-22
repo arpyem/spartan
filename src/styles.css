@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --color-bg: #0a0c0f;
+  --color-panel: rgba(13, 19, 23, 0.82);
+  --color-panel-border: rgba(74, 144, 217, 0.2);
+  --color-hud: #00ff41;
+  --color-amber: #f5a623;
+  --color-steel: #4a90d9;
+  --color-text: #d6efe2;
+  --color-text-muted: rgba(214, 239, 226, 0.68);
+  --shadow-glow-green: 0 0 12px rgba(0, 255, 65, 0.35);
+  --shadow-glow-amber: 0 0 18px rgba(245, 166, 35, 0.28);
+  font-family: "Share Tech Mono", monospace;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(74, 144, 217, 0.22), transparent 36%),
+    linear-gradient(180deg, #05070a 0%, #0a0c0f 52%, #081114 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.85) 0,
+      rgba(255, 255, 255, 0.85) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.font-display {
+  font-family: "Orbitron", sans-serif;
+}
+
+.font-hud {
+  font-family: "Share Tech Mono", monospace;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.mobile-frame {
+  position: relative;
+  width: min(100%, 30rem);
+  min-height: calc(100vh - 2rem);
+  margin: 0 auto;
+  padding: 1.25rem;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(12, 17, 20, 0.94), rgba(9, 13, 16, 0.86));
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.mobile-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, rgba(0, 255, 65, 0.08), transparent 30%),
+    linear-gradient(180deg, transparent 0%, rgba(74, 144, 217, 0.04) 100%);
+}
+
+.panel {
+  border: 1px solid rgba(74, 144, 217, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(10, 16, 19, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.hud-kicker {
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--color-hud);
+  text-shadow: var(--shadow-glow-green);
+}
+
+.glow-green {
+  box-shadow: var(--shadow-glow-green);
+}
+
+.glow-amber {
+  box-shadow: var(--shadow-glow-amber);
+}
+
+.focus-shell:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 3px;
+}
+

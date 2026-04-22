@@ -1,50 +1,121 @@
 # Spartan Gains
 
-Halo 3-themed workout tracker PWA. Users log workouts, earn EXP across five independent training tracks, rank up through the Halo 3 ladder, and unlock tour shields as they prestige each track.
+Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across Cardio, Legs, Push, Pull, and Core, earn EXP against the Halo 3 rank ladder, and eventually prestige each track with Tour shields. The project is still in active build-out, so this repository is both the app source and the execution guide for the remaining milestones.
+
+## Current App Status
+- Plan 01 is complete: the repo now has a working React/Vite/Tailwind/Firebase foundation, route shell, test harness, and PWA baseline.
+- Plans 02–05 are still ahead of us: progression logic, real Firestore flows, production UI surfaces, and the final Halo-quality animation pass are not implemented yet.
+- The current app is intentionally a styled scaffold. It validates the architecture and local tooling, not the finished product experience.
+
+## Repo Structure
+- `src/lib`
+  Pure TypeScript domain/config code. This is where rank math, XP logic, Firebase wiring, and other non-React logic must live.
+- `src/components`
+  Shared UI building blocks and layout primitives such as boot surfaces, modal hosts, and future rank/tour components.
+- `src/screens`
+  Route-level screens. These map directly to app surfaces like home, auth, and workout logging.
+- `src/hooks`
+  Reserved for React hooks that coordinate app state and subscriptions without pushing business logic into components.
+- `src/__tests__`
+  Unit and integration tests. Pure logic tests and Firebase-boundary mocks live here.
+- `public`
+  Static assets such as the PWA manifest and icons.
+- `plans/`
+  The implementation roadmap: one master plan plus milestone-specific plans that are refined and executed one at a time.
+- `scripts/`
+  Repository automation entrypoints, including the cross-platform bootstrap workflow.
+- `docs/sessions/`
+  Session records describing what changed, what decisions were made, and what did not work cleanly during implementation.
 
 ## Core Docs
 - Product spec: [spartans_spec.md](/C:/Users/rpmmi/Documents/spartan/spartans_spec.md)
-- Agent rules: [AGENTS.md](/C:/Users/rpmmi/Documents/spartan/AGENTS.md)
-- Master implementation plan: [plans/implementation-plan.md](/C:/Users/rpmmi/Documents/spartan/plans/implementation-plan.md)
+- Agent and engineering rules: [AGENTS.md](/C:/Users/rpmmi/Documents/spartan/AGENTS.md)
+- Master roadmap: [plans/implementation-plan.md](/C:/Users/rpmmi/Documents/spartan/plans/implementation-plan.md)
+- Focused milestones:
+  [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md),
+  [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md),
+  [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md),
+  [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md),
+  [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md)
 
-## Plan Status
-This table is the project-level status source for the implementation plans. Keep it current as work begins, changes state, or completes.
+## Bootstrap And Local Development
+### First-time setup
+Run the bootstrap entrypoint from the repo root:
+
+```bash
+npm run bootstrap
+```
+
+What bootstrap does:
+- validates that your Node version satisfies the repo requirement
+- installs dependencies using `package-lock.json`
+- creates `.env` from `.env.example` if `.env` is missing
+- stops with a clear message if the Firebase values in `.env` are still blank
+
+Bootstrap is safe to rerun. If `.env` already exists, it leaves local values untouched.
+
+### Common local commands
+```bash
+npm run dev
+npm test
+npm run build
+npm run preview
+```
+
+## Environment Setup
+The app expects these Firebase variables in `.env`:
+
+```bash
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+`npm run bootstrap` will create `.env` from `.env.example` if needed, but it will not fill in real secrets for you. After bootstrap creates the file, add your Firebase project values before trying to use the authenticated app flows.
+
+Minimum local runtime:
+- Node `>=20`
+- npm compatible with that Node installation
+
+## Testing And Build Commands
+Use these commands as the standard local checks:
+
+```bash
+npm test
+npm run coverage
+npm run build
+```
+
+The baseline expectation for feature work is:
+- tests stay green
+- the build stays type-safe
+- Firebase stays mocked in tests
+- the app remains usable at mobile-first widths
+
+## Milestone Plans And Status
+This table is the project-level status source for the implementation plans.
 
 | Plan | Scope | Status |
 |---|---|---|
 | [Implementation Plan](/C:/Users/rpmmi/Documents/spartan/plans/implementation-plan.md) | Master roadmap, guardrails, milestone sequencing, release gates | Active |
-| [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md) | App shell, routing, theme, env contract, Firebase surface, test/PWA baseline | Planned |
+| [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md) | App shell, routing, theme, env contract, Firebase surface, test/PWA baseline | Complete |
 | [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md) | Rank logic, XP economy, Firestore model, auth bootstrap, atomic write flows | Planned |
 | [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Planned |
 | [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Planned |
 | [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, mobile QA, PWA completion, release readiness | Planned |
 
-## Status Definitions
-- `Planned`: documented and approved for future work, but not started.
-- `Active`: currently being refined or executed.
-- `Blocked`: cannot move forward until an external dependency or decision is resolved.
-- `Complete`: finished to the acceptance criteria defined in the corresponding plan.
+Status meanings:
+- `Planned`: documented and approved, but not started
+- `Active`: currently being refined or executed
+- `Blocked`: waiting on a missing dependency or decision
+- `Complete`: done to the plan’s acceptance criteria
 
-## Focused Plans
-### [Implementation Plan](/C:/Users/rpmmi/Documents/spartan/plans/implementation-plan.md)
-Use this as the roadmap and dependency index. It defines the cross-cutting rules that every milestone inherits.
-
-### [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md)
-Use this when setting up the app shell, types, theme, Firebase boundary, test harness, and PWA baseline.
-
-### [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md)
-Use this when implementing the rank ladder, XP rules, Firestore document shapes, and atomic progression flows.
-
-### [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md)
-Use this when building the signed-in app experience: auth, home, track cards, log flow, and info surfaces.
-
-### [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md)
-Use this when implementing the emblem system and the Halo 3-style progression moments that define the product.
-
-### [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md)
-Use this when hardening tests, validating mobile/PWA behavior, and preparing the project for deployment.
-
-## Working Agreement
-- Keep `README.md` and `plans/` synchronized with actual project state.
-- Update milestone statuses in the same change that materially advances or completes a plan.
-- Do not treat placeholder art or generic motion as release-ready; the animation bar in `AGENTS.md` still governs completion.
+## Working Conventions
+- Read [AGENTS.md](/C:/Users/rpmmi/Documents/spartan/AGENTS.md) before touching implementation. It is the source of truth for repo rules.
+- Keep business logic in `src/lib`. Do not move progression math or Firebase write rules into UI components.
+- Firestore updates that must stay in sync need batched writes.
+- Keep `README.md`, `plans/`, and `docs/sessions/` current as the project evolves.
+- The animation bar is part of the product, not polish. Generic motion is not considered done in this repo.

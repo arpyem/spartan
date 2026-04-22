@@ -129,6 +129,7 @@ All Firebase config comes from `.env` via `import.meta.env.VITE_*`. Never hardco
 - **Logic first, UI second.** If a feature needs new `src/lib/` functions, write and test those before building the component that uses them.
 - **Never skip the animation.** If a component has an animation spec in `SPARTAN-GAINS-SPEC.md`, the animation is required, not optional. A component without its animation is not done.
 - **Maintain planning docs.** Keep `README.md` and the files under `plans/` in sync with implementation progress. If a milestone starts, is blocked, or completes, update its status in `README.md` as part of the same change.
+- **Write session docs.** For each working session that changes the repo, add or update a session document under `docs/sessions/` summarizing what was done, what decisions were made, and any learnings from approaches that failed, needed rework, or required environment-specific fixes.
 
 ### Definition of Done for a Feature
 
