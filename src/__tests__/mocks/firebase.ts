@@ -1,8 +1,12 @@
 import type { User } from 'firebase/auth';
 
 type AuthListener = (user: User | null) => void;
-type SnapshotListener = (snapshot: MockDocumentSnapshot) => void;
+type SnapshotNextListener = (snapshot: unknown) => void;
 type SnapshotErrorListener = (error: Error) => void;
+type SnapshotListener = {
+  next: SnapshotNextListener;
+  error?: SnapshotErrorListener;
+};
 
 interface MockDocRef {
   __kind: 'doc';
@@ -32,6 +36,16 @@ interface MockDocumentSnapshot {
   ref: MockDocRef;
 }
 
+interface MockQueryDocumentSnapshot {
+  id: string;
+  ref: MockDocRef;
+  data: () => unknown;
+}
+
+interface MockQuerySnapshot {
+  docs: MockQueryDocumentSnapshot[];
+}
+
 interface MockBatchOperation {
   type: 'set' | 'update';
   ref: MockDocRef;
@@ -43,15 +57,27 @@ interface StoredDoc {
   data: Record<string, unknown>;
 }
 
+interface RedirectResult {
+  user: User;
+}
+
+type SeedCollectionDoc = Record<string, unknown> & { __id?: string };
+
 const authListeners = new Set<AuthListener>();
-const snapshotListeners = new Map<
-  string,
-  Set<{ next: SnapshotListener; error?: SnapshotErrorListener }>
->();
+const snapshotListeners = new Map<string, Set<SnapshotListener>>();
 const docStore = new Map<string, StoredDoc>();
 const committedBatches: MockBatchOperation[][] = [];
 let emitAuthImmediately = true;
 let autoIdCounter = 0;
+let pendingRedirectResult: RedirectResult | null = null;
+let redirectResultError: Error | null = null;
+let signInWithRedirectError: Error | null = null;
+let signOutError: Error | null = null;
+const authActionCalls = {
+  getRedirectResult: 0,
+  signInWithRedirect: 0,
+  signOut: 0,
+};
 
 export const auth = {
   currentUser: null as User | null,
@@ -69,13 +95,42 @@ export const firebaseApp = {
   name: 'spartan-gains-test',
 };
 
-function cloneData(data: Record<string, unknown>) {
+function cloneData<T>(data: T): T {
   return structuredClone(data);
 }
 
 function getSegmentId(path: string) {
   const segments = path.split('/');
   return segments[segments.length - 1];
+}
+
+function getParentCollectionPath(path: string) {
+  const segments = path.split('/');
+
+  if (segments.length <= 1) {
+    return null;
+  }
+
+  return segments.slice(0, -1).join('/');
+}
+
+function isDocumentPath(path: string) {
+  return path.split('/').length % 2 === 0;
+}
+
+function isDirectChildOfCollection(docPath: string, collectionPath: string) {
+  return (
+    docPath.startsWith(`${collectionPath}/`) &&
+    docPath.split('/').length === collectionPath.split('/').length + 1
+  );
+}
+
+function createDocRef(path: string): MockDocRef {
+  return {
+    __kind: 'doc',
+    path,
+    id: getSegmentId(path),
+  };
 }
 
 function createSnapshot(ref: MockDocRef): MockDocumentSnapshot {
@@ -87,6 +142,44 @@ function createSnapshot(ref: MockDocRef): MockDocumentSnapshot {
     id: ref.id,
     ref,
   };
+}
+
+function createCollectionSnapshot(collectionPath: string): MockQuerySnapshot {
+  const docs = [...docStore.entries()]
+    .filter(([path, stored]) => stored.exists && isDirectChildOfCollection(path, collectionPath))
+    .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+    .map(([path, stored]) => ({
+      id: getSegmentId(path),
+      ref: createDocRef(path),
+      data: () => cloneData(stored.data),
+    }));
+
+  return { docs };
+}
+
+function emitPathSnapshot(path: string) {
+  const listeners = snapshotListeners.get(path);
+
+  if (!listeners) {
+    return;
+  }
+
+  const snapshot = isDocumentPath(path)
+    ? createSnapshot(createDocRef(path))
+    : createCollectionSnapshot(path);
+
+  for (const listener of listeners) {
+    listener.next(snapshot);
+  }
+}
+
+function notifyDocAndParentCollection(path: string) {
+  emitPathSnapshot(path);
+  const parentCollectionPath = getParentCollectionPath(path);
+
+  if (parentCollectionPath) {
+    emitPathSnapshot(parentCollectionPath);
+  }
 }
 
 function setStoredDoc(path: string, data: Record<string, unknown>, exists = true) {
@@ -127,6 +220,20 @@ function applyNestedFieldUpdate(
   cursor[finalSegment] = value;
 }
 
+function replaceCollectionDocs(path: string, docs: SeedCollectionDoc[]) {
+  for (const existingPath of [...docStore.keys()]) {
+    if (isDirectChildOfCollection(existingPath, path)) {
+      docStore.delete(existingPath);
+    }
+  }
+
+  docs.forEach((docData, index) => {
+    const { __id, ...data } = docData;
+    const docId = __id ?? `seed-doc-${index + 1}`;
+    setStoredDoc(`${path}/${docId}`, data);
+  });
+}
+
 export function setInitialAuthState(user: User | null) {
   auth.currentUser = user;
 }
@@ -135,8 +242,34 @@ export function setAuthBootstrapMode(mode: 'immediate' | 'deferred') {
   emitAuthImmediately = mode === 'immediate';
 }
 
+export function setRedirectResult(user: User | null) {
+  pendingRedirectResult = user ? { user } : null;
+}
+
+export function setAuthActionError(
+  action: 'redirect_result' | 'sign_in' | 'sign_out',
+  error: Error | null,
+) {
+  if (action === 'redirect_result') {
+    redirectResultError = error;
+    return;
+  }
+
+  if (action === 'sign_in') {
+    signInWithRedirectError = error;
+    return;
+  }
+
+  signOutError = error;
+}
+
+export function getAuthActionCalls() {
+  return { ...authActionCalls };
+}
+
 export function emitAuthState(user: User | null) {
   auth.currentUser = user;
+
   for (const listener of authListeners) {
     listener(user);
   }
@@ -152,6 +285,36 @@ export function onAuthStateChangedMock(_auth: unknown, listener: AuthListener) {
   return () => {
     authListeners.delete(listener);
   };
+}
+
+export async function getRedirectResultMock() {
+  authActionCalls.getRedirectResult += 1;
+
+  if (redirectResultError) {
+    throw redirectResultError;
+  }
+
+  const nextResult = pendingRedirectResult;
+  pendingRedirectResult = null;
+  return nextResult;
+}
+
+export async function signInWithRedirectMock() {
+  authActionCalls.signInWithRedirect += 1;
+
+  if (signInWithRedirectError) {
+    throw signInWithRedirectError;
+  }
+}
+
+export async function signOutMock() {
+  authActionCalls.signOut += 1;
+
+  if (signOutError) {
+    throw signOutError;
+  }
+
+  emitAuthState(null);
 }
 
 export function docMock(
@@ -171,11 +334,7 @@ export function docMock(
   const basePath = parent.__kind === 'firestore-mock' ? '' : parent.path;
   const path = [...(basePath ? [basePath] : []), ...segments].join('/');
 
-  return {
-    __kind: 'doc',
-    path,
-    id: getSegmentId(path),
-  };
+  return createDocRef(path);
 }
 
 export function collectionMock(
@@ -198,6 +357,7 @@ export async function getDocMock(ref: MockDocRef) {
 
 export async function setDocMock(ref: MockDocRef, data: Record<string, unknown>) {
   setStoredDoc(ref.path, data);
+  notifyDocAndParentCollection(ref.path);
 }
 
 export async function updateDocMock(
@@ -212,6 +372,7 @@ export async function updateDocMock(
   }
 
   setStoredDoc(ref.path, nextData);
+  notifyDocAndParentCollection(ref.path);
 }
 
 export function incrementMock(amount: number) {
@@ -243,6 +404,7 @@ export function writeBatchMock(_db: typeof db) {
       for (const operation of operations) {
         if (operation.type === 'set') {
           setStoredDoc(operation.ref.path, operation.data);
+          notifyDocAndParentCollection(operation.ref.path);
           continue;
         }
 
@@ -264,14 +426,15 @@ function isIncrementValue(value: unknown): value is IncrementValue {
 }
 
 export function onSnapshotMock(
-  ref: MockDocRef,
-  next: SnapshotListener,
+  ref: MockDocRef | MockCollectionRef,
+  next: SnapshotNextListener,
   error?: SnapshotErrorListener,
 ) {
   const listeners = snapshotListeners.get(ref.path) ?? new Set();
   const listener = { next, error };
   listeners.add(listener);
   snapshotListeners.set(ref.path, listeners);
+  next(isDocumentPath(ref.path) ? createSnapshot(createDocRef(ref.path)) : createCollectionSnapshot(ref.path));
 
   return () => {
     const currentListeners = snapshotListeners.get(ref.path);
@@ -287,17 +450,18 @@ export function seedDoc(path: string, data: Record<string, unknown>) {
   setStoredDoc(path, data);
 }
 
+export function seedCollection(path: string, docs: SeedCollectionDoc[]) {
+  replaceCollectionDocs(path, docs);
+}
+
 export function emitDocSnapshot(path: string, data: Record<string, unknown>) {
   setStoredDoc(path, data);
-  const ref = {
-    __kind: 'doc' as const,
-    path,
-    id: getSegmentId(path),
-  };
+  notifyDocAndParentCollection(path);
+}
 
-  for (const listener of snapshotListeners.get(path) ?? []) {
-    listener.next(createSnapshot(ref));
-  }
+export function emitCollectionSnapshot(path: string, docs: SeedCollectionDoc[]) {
+  replaceCollectionDocs(path, docs);
+  emitPathSnapshot(path);
 }
 
 export function emitSnapshotError(path: string, error: Error) {
@@ -362,4 +526,11 @@ export function resetFirebaseMocks() {
   auth.currentUser = null;
   emitAuthImmediately = true;
   autoIdCounter = 0;
+  pendingRedirectResult = null;
+  redirectResultError = null;
+  signInWithRedirectError = null;
+  signOutError = null;
+  authActionCalls.getRedirectResult = 0;
+  authActionCalls.signInWithRedirect = 0;
+  authActionCalls.signOut = 0;
 }

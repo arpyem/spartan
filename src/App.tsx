@@ -1,32 +1,17 @@
-import { useEffect, useState } from 'react';
-import type { User } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
 import { BrowserRouter } from 'react-router-dom';
 import { BootScreen } from '@/components/BootScreen';
 import { AppRoutes } from '@/router';
 import { AuthScreen } from '@/screens/AuthScreen';
-import { auth } from '@/lib/firebase';
+import { AuthSessionProvider, useAuthSession } from '@/hooks/useAuthSession';
 
-type AuthPhase = 'loading' | 'signed_out' | 'signed_in';
+function AppShell() {
+  const { status } = useAuthSession();
 
-export default function App() {
-  const [authPhase, setAuthPhase] = useState<AuthPhase>('loading');
-  const [, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
-      setAuthPhase(nextUser ? 'signed_in' : 'signed_out');
-    });
-
-    return unsubscribe;
-  }, []);
-
-  if (authPhase === 'loading') {
+  if (status === 'loading') {
     return <BootScreen />;
   }
 
-  if (authPhase === 'signed_out') {
+  if (status === 'signed_out') {
     return <AuthScreen />;
   }
 
@@ -39,5 +24,13 @@ export default function App() {
     >
       <AppRoutes />
     </BrowserRouter>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthSessionProvider>
+      <AppShell />
+    </AuthSessionProvider>
   );
 }

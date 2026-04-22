@@ -1,4 +1,11 @@
-import { getGlobalRankIndex, getNextRankXP, getRankFromXP, getRankProgress, RANKS } from '@/lib/ranks';
+import {
+  getGlobalRankIndex,
+  getGlobalRankProgress,
+  getNextRankXP,
+  getRankFromXP,
+  getRankProgress,
+  RANKS,
+} from '@/lib/ranks';
 import type { TracksMap } from '@/lib/types';
 
 function createTracksMap(overrides: Partial<TracksMap> = {}): TracksMap {
@@ -82,5 +89,35 @@ describe('getGlobalRankIndex', () => {
     });
 
     expect(getGlobalRankIndex(tracks)).toBe(Math.floor((1 + 6 + 18 + 38 + 0) / 5));
+  });
+});
+
+describe('getGlobalRankProgress', () => {
+  it('returns 0 when all tracks are at the start of their tiers', () => {
+    expect(getGlobalRankProgress(createTracksMap())).toBe(0);
+  });
+
+  it('returns the averaged fractional remainder across mixed track progress', () => {
+    const tracks = createTracksMap({
+      cardio: { xp: 2, tour: 1 },
+      legs: { xp: 11, tour: 1 },
+      push: { xp: 105, tour: 1 },
+      pull: { xp: 500, tour: 1 },
+      core: { xp: 0, tour: 1 },
+    });
+
+    expect(getGlobalRankProgress(tracks)).toBe(80);
+  });
+
+  it('returns 100 when every track is at max rank', () => {
+    const tracks = createTracksMap({
+      cardio: { xp: 2000, tour: 1 },
+      legs: { xp: 2000, tour: 1 },
+      push: { xp: 2000, tour: 1 },
+      pull: { xp: 2000, tour: 1 },
+      core: { xp: 2000, tour: 1 },
+    });
+
+    expect(getGlobalRankProgress(tracks)).toBe(100);
   });
 });

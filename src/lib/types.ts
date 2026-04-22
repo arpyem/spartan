@@ -19,6 +19,18 @@ export interface DoubleXPStatus {
   upcoming: boolean;
 }
 
+export interface WorkoutTrackStats {
+  workouts: number;
+  totalValue: number;
+  totalXp: number;
+}
+
+export interface WorkoutStats {
+  totalWorkouts: number;
+  totalXp: number;
+  byTrack: Record<TrackKey, WorkoutTrackStats>;
+}
+
 export interface UserDoc {
   displayName: string;
   email: string;

@@ -94,3 +94,24 @@ export function getGlobalRankIndex(tracks: TracksMap): number {
 
   return Math.floor(totalRankIndex / Object.values(tracks).length);
 }
+
+export function getGlobalRankProgress(tracks: TracksMap): number {
+  const maxRankId = RANKS[RANKS.length - 1].id;
+  const averageProgress =
+    Object.values(tracks).reduce((sum, track) => {
+      const rank = getRankFromXP(track.xp);
+      const progress = getRankProgress(track.xp);
+
+      if (rank.id >= maxRankId) {
+        return sum + maxRankId;
+      }
+
+      return sum + rank.id + progress / 100;
+    }, 0) / Object.values(tracks).length;
+
+  if (averageProgress >= maxRankId) {
+    return 100;
+  }
+
+  return Math.floor((averageProgress - Math.floor(averageProgress)) * 100);
+}

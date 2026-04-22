@@ -5,8 +5,9 @@ Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across 
 ## Current App Status
 - Plan 01 is complete: the repo now has a working React/Vite/Tailwind/Firebase foundation, route shell, test harness, and PWA baseline.
 - Plan 02 is complete: rank math, XP rules, deterministic Double XP state, Firestore write contracts, auth bootstrap helpers, and real-time hook boundaries are now implemented and tested.
-- Plans 03-05 are still ahead of us: production auth/home/log surfaces, Halo-quality emblem and ceremony work, and final release hardening are not implemented yet.
-- The current app is still a styled scaffold at the UI layer. The domain and data contracts are now in place, but the finished product experience still depends on later milestones.
+- Plan 03 is complete: Google redirect auth, live home and log screens, real-time workout aggregates, info modal data, and rank-up/Tour prompt plumbing are now implemented and tested.
+- Plans 04-05 remain ahead: Halo-quality emblem fidelity, celebration polish, mobile QA hardening, and release readiness are still pending.
+- The current app is now a usable end-to-end product loop. The remaining work is primarily fidelity, ceremony weight, and release hardening rather than missing core flows.
 
 ## Repo Structure
 - `src/lib`
@@ -104,7 +105,7 @@ This table is the project-level status source for the implementation plans.
 | [Implementation Plan](/C:/Users/rpmmi/Documents/spartan/plans/implementation-plan.md) | Master roadmap, guardrails, milestone sequencing, release gates | Active |
 | [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md) | App shell, routing, theme, env contract, Firebase surface, test/PWA baseline | Complete |
 | [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md) | Rank logic, XP economy, Firestore model, auth bootstrap, atomic write flows | Complete |
-| [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Planned |
+| [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Complete |
 | [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Planned |
 | [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, mobile QA, PWA completion, release readiness | Planned |
 

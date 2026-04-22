@@ -39,7 +39,8 @@ describe('useUserData', () => {
     const { useUserData } = await import('@/hooks/useUserData');
     const { result, unmount } = renderHook(() => useUserData('spartan-117'));
 
-    expect(result.current.status).toBe('loading');
+    expect(result.current.status).toBe('ready');
+    expect(result.current.userDoc).toBeNull();
     expect(getSnapshotListenerCount('users/spartan-117')).toBe(1);
 
     await act(async () => {
