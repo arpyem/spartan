@@ -43,7 +43,6 @@ test('renders the home screen from seeded data and opens the info modal', async 
   );
 
   await expect(page.getByRole('heading', { name: 'Service Record' })).toBeVisible();
-  await expect(page.getByText('Field Deck')).toBeVisible();
   await expect(page.getByText('Cardio')).toBeVisible();
   await expect(page.getByText('Legs')).toBeVisible();
   await expect(page.getByText('Push')).toBeVisible();
@@ -51,13 +50,20 @@ test('renders the home screen from seeded data and opens the info modal', async 
   await expect(page.getByText('Core')).toBeVisible();
   await expect(page.getByText(/Tour advancement available/i)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Legs/i })).toHaveAttribute('data-selected', 'true');
+  await expect(page.getByText('Log workout')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Open global rank info' }).click();
+  await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeVisible();
+  await expect(page.getByText(/Composite standing is derived from the floor average/i)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Global rank info' })).toBeHidden();
 
   await page.getByRole('button', { name: 'Open service record' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Spartan Details' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Service Record' })).toBeVisible();
   await expect(page.getByText('Total workouts')).toBeVisible();
   await expect(page.getByText(/^2$/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Close' }).click();
-  await expect(page.getByRole('heading', { name: 'Spartan Details' })).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Service Record' })).toBeHidden();
 });

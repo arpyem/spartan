@@ -261,7 +261,6 @@ describe('Plan 03 app flow', () => {
     expect(
       await screen.findByRole('button', { name: /Open service record/i }, { timeout: 5000 }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Field Deck/i)).toBeInTheDocument();
     expect(screen.getByText(/Double XP Active/i)).toBeInTheDocument();
     expect(screen.getByText(/Cardio/i)).toBeInTheDocument();
     expect(screen.getByText(/Legs/i)).toBeInTheDocument();
@@ -271,9 +270,19 @@ describe('Plan 03 app flow', () => {
     expect(screen.getAllByText(/EXP to next rank/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Tour advancement available/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Service Tour/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Log workout$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Open global rank info/i }));
+    expect(await screen.findByRole('dialog', { name: /Global rank info/i })).toBeInTheDocument();
+    expect(screen.getByText(/Composite standing is derived from the floor average/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select a track row to log one session/i)).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /Global rank info/i })).not.toBeInTheDocument();
+    });
 
     await user.click(screen.getByRole('button', { name: /Open service record/i }));
-    expect(await screen.findByText(/Spartan Details/i)).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: /Service Record/i })).toBeInTheDocument();
     expect(screen.getByText(/Total workouts/i)).toBeInTheDocument();
     expect(screen.getByText(/^2$/)).toBeInTheDocument();
 
@@ -296,7 +305,7 @@ describe('Plan 03 app flow', () => {
     await user.click(screen.getByRole('button', { name: /^Sign Out$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/sign-out failed/i);
-    expect(screen.getByText(/Spartan Details/i)).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /Service Record/i })).toBeInTheDocument();
   });
 
   it('updates the app when auth becomes available after mount', async () => {

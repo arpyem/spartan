@@ -171,7 +171,7 @@ describe('Milestone 04 components', () => {
     const trigger = screen.getByRole('button', { name: /Open record/i });
     await user.click(trigger);
 
-    const dialog = await screen.findByRole('dialog', { name: /Spartan Details/i });
+    const dialog = await screen.findByRole('dialog', { name: /Service Record/i });
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     await waitFor(() => {
       expect(dialog.contains(document.activeElement)).toBe(true);
@@ -180,7 +180,7 @@ describe('Milestone 04 components', () => {
     await user.keyboard('{Escape}');
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /Spartan Details/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: /Service Record/i })).not.toBeInTheDocument();
     });
     expect(trigger).toHaveFocus();
   });

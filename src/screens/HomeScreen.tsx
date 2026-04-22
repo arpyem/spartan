@@ -162,22 +162,18 @@ export function HomeScreen() {
             <p className="service-label">Spartan gains</p>
             <p className="truncate text-sm text-white">{userDoc.displayName || 'Spartan'}</p>
           </div>
+        </div>
+
+        <header className="service-header flex items-center justify-between gap-4 pb-2">
+          <h1 className="font-display service-title text-white">Service Record</h1>
           <button
             type="button"
             onClick={() => setIsInfoOpen(true)}
-            className="focus-shell service-button rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.22em]"
+            className="focus-shell service-button shrink-0 rounded-none px-3 py-2 text-[0.72rem] uppercase tracking-[0.22em]"
             aria-label="Open service record"
           >
             Record
           </button>
-        </div>
-
-        <header className="service-header pb-3">
-          <p className="service-label">Field Deck</p>
-          <h1 className="font-display service-title mt-3 text-white">Service Record</h1>
-          <p className="service-subtitle mt-2">
-            Five-track Halo 3 progression dossier.
-          </p>
         </header>
 
         <GlobalRank
@@ -225,19 +221,7 @@ export function HomeScreen() {
           })}
         </div>
 
-        <div className="grid gap-3">
-          <div className="service-frame p-4">
-            <p className="service-label">Log workout</p>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)] sm:hidden">
-              Select a track row to log one session, then drop back to the deck.
-            </p>
-            <p className="mt-2 hidden text-sm leading-6 text-[var(--color-text-muted)] sm:block">
-              Select a track row above to enter minutes or sets for the next training
-              session.
-            </p>
-          </div>
-          <DoubleXPBanner status={doubleXpStatus} />
-        </div>
+        <DoubleXPBanner status={doubleXpStatus} />
       </section>
 
       <InfoModal

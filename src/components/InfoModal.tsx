@@ -82,14 +82,14 @@ export function InfoModal({
             transition={{ duration: 0.24, ease: 'easeOut' }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="service-strip">
-              <div>
-                <p className="service-label">Service record</p>
+            <div className="service-strip items-start">
+              <div className="min-w-0">
+                <p className="service-label">Spartan details</p>
                 <h2
                   id={titleId}
                   className="font-display mt-1 text-xl uppercase tracking-[0.08em] text-white"
                 >
-                  Spartan Details
+                  Service Record
                 </h2>
               </div>
               <button
@@ -162,7 +162,7 @@ export function InfoModal({
                               className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] pb-3 last:border-b-0 last:pb-0"
                             >
                               <div className="flex items-center gap-3">
-                                <TrackBadge badgeKey={track.badgeKey} size={34} />
+                                <TrackBadge badgeKey={track.badgeKey} size={30} variant="glyph" />
                                 <span className="text-sm text-white">{track.label}</span>
                               </div>
                               <span className="text-right text-[0.8rem] text-[var(--color-text-muted)]">
@@ -184,7 +184,7 @@ export function InfoModal({
                           className="service-well flex items-center justify-between gap-3 p-4"
                         >
                           <div className="flex items-center gap-3">
-                            <TrackBadge badgeKey={track.badgeKey} size={34} />
+                            <TrackBadge badgeKey={track.badgeKey} size={30} variant="glyph" />
                             <span className="text-sm text-white">{track.label}</span>
                           </div>
                           <span className="text-[0.72rem] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">

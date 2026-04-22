@@ -36,30 +36,35 @@ export function TrackCard({
       className="focus-shell service-row service-selection-glow block w-full cursor-pointer p-4 text-left"
       data-selected={tourAdvanceAvailable ? 'true' : 'false'}
     >
-      <div className="grid grid-cols-[4.25rem,1fr,5.75rem] items-center gap-3 sm:grid-cols-[5rem,1fr,6.5rem] sm:gap-4">
-        <div className="flex flex-col items-center text-center">
-          <TrackBadge badgeKey={track.badgeKey} size={42} variant="glyph" />
-          <p className="mt-2 text-[0.62rem] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
-            {track.label}
-          </p>
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <TrackBadge badgeKey={track.badgeKey} size={34} variant="glyph" />
+            <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
+              {track.label}
+            </p>
+          </div>
+          <div className="flex min-w-0 items-center justify-end gap-3 text-right">
+            <div className="min-w-0">
+              <p className="text-[0.72rem] leading-4 text-[var(--color-text-muted)]">
+                {rankName}
+              </p>
+            </div>
+            <RankEmblem rankId={rankId} tour={tour} size={76} />
+          </div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           <XPBar
             progress={progress}
             doubleXPActive={doubleXPActive}
             label={`${xp} EXP`}
           />
           <div className="flex flex-wrap items-center justify-between gap-2 text-[0.66rem] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+            <span>{xp} EXP</span>
             <span>
               {xpToNextRank === null ? 'Max rank' : `${xpToNextRank} EXP to next rank`}
             </span>
           </div>
-        </div>
-        <div className="flex flex-col items-center justify-end text-center">
-          <RankEmblem rankId={rankId} tour={tour} size={60} />
-          <p className="mt-2 text-[0.72rem] leading-4 text-[var(--color-text-muted)]">
-            {rankName}
-          </p>
         </div>
       </div>
     </button>
