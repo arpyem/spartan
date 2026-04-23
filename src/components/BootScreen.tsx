@@ -5,7 +5,7 @@ export function BootScreen() {
         <section className="service-frame w-full max-w-xl p-8 text-center">
           <p className="hud-kicker font-hud text-xs">UNSC uplink</p>
           <h1 className="font-display mt-4 text-4xl uppercase tracking-[0.1em] text-slate-100">
-            Spartan Gains
+            Spartan
           </h1>
           <p className="mt-4 text-sm text-[var(--color-text-muted)]">
             Syncing service record and waiting for Firebase auth state.

@@ -1,12 +1,19 @@
-export const pwaManifest = {
-  name: 'Spartan Gains',
-  short_name: 'SpartanGains',
+import type { DisplayOverride, ManifestOptions } from 'vite-plugin-pwa';
+
+const pwaDisplayOverride: DisplayOverride[] = ['standalone', 'browser'];
+
+export const pwaManifest: Partial<ManifestOptions> = {
+  id: '/',
+  name: 'Spartan',
+  short_name: 'Spartan',
   description:
     'A Halo 3-themed workout tracker that turns real training into rank progression.',
   theme_color: '#0a0c0f',
   background_color: '#0a0c0f',
   display: 'standalone' as const,
+  display_override: pwaDisplayOverride,
   orientation: 'portrait' as const,
+  prefer_related_applications: false,
   start_url: '/',
   scope: '/',
   lang: 'en',

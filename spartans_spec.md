@@ -1,4 +1,4 @@
-# Spartan Gains — PWA Spec
+# Spartan — PWA Spec
 > A Halo 3-themed workout tracker. Log workouts, earn EXP, rank up across five training tracks. Built as a PWA with Google Auth and Firebase persistence.
 
 ---
@@ -378,8 +378,8 @@ Double XP banner: slow amber pulse every 3s
 
 ```json
 {
-  "name": "Spartan Gains",
-  "short_name": "SpartanGains",
+  "name": "Spartan",
+  "short_name": "Spartan",
   "theme_color": "#0a0c0f",
   "background_color": "#0a0c0f",
   "display": "standalone",

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GlobalRank } from '@/components/GlobalRank';
 import { HomeStatusRail } from '@/components/HomeStatusRail';
 import { InfoModal } from '@/components/InfoModal';
+import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { StatusBanner } from '@/components/StatusBanner';
 import { TrackCard } from '@/components/TrackCard';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -186,6 +187,7 @@ export function HomeScreen() {
           onOpenRecord={() => setIsInfoOpen(true)}
           doubleXPActive={doubleXpStatus.active}
         />
+        <PwaInstallBanner />
         <HomeStatusRail items={homeStatusItems} />
 
         <div className="service-track-deck">

@@ -1,4 +1,4 @@
-# AGENTS.md — Spartan Gains
+# AGENTS.md — Spartan
 
 This file governs how agents work on this codebase. Read it fully before writing any code. It covers architecture rules, workflow, testing requirements, and the animation quality bar that this project demands.
 

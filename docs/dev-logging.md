@@ -1,6 +1,6 @@
 # Dev Logging
 
-Spartan Gains includes a dev-only structured log system for manual browser QA and agent-assisted debugging.
+Spartan includes a dev-only structured log system for manual browser QA and agent-assisted debugging.
 
 ## How To Open It
 - Run the app with `npm run dev`.

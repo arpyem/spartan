@@ -1,6 +1,6 @@
 # Production Phone Deploy Runbook
 
-Use this runbook for the first production phone validation pass. The goal is to validate the live Firebase Hosting URL in an iPhone browser against the production Firebase project. This pass is browser-first, not installability-first.
+Use this runbook for the production mobile validation pass. The goal is to validate the live Firebase Hosting URL in both the iPhone browser shell and the installed standalone PWA against the production Firebase project.
 
 ## Pre-Deploy Audit
 - Confirm `.env` contains all required `VITE_FIREBASE_*` values for the production Firebase project.
@@ -45,10 +45,20 @@ FIREBASE_TOKEN=... npx firebase-tools deploy --only hosting --project <productio
 - Reload once while online, then disconnect the network and confirm the shell and last synced state remain visible.
 - Confirm signed-out offline state disables sign-in and signed-in offline state disables workout and Tour writes with clear copy.
 
+## Production Install / Standalone Pass
+- On desktop Chromium, confirm the auth or home surface shows the install call-to-action and that the browser install prompt opens successfully.
+- Install the app from desktop Chromium and launch the installed window separately from the browser tab.
+- Confirm the installed desktop window opens without browser chrome and lands in the same signed-in shell.
+- On iPhone, use the browser share menu and choose `Add to Home Screen`, then launch the app from the new icon.
+- Confirm the installed iPhone shell launches in standalone mode, preserves auth, and reaches the home screen without a redirect loop.
+- From the installed shell, validate auth, home, log, rank-up, Tour, and return-home flows again.
+- Load the installed app once while online, then disable network and relaunch from the installed icon to confirm the cached shell and last synced data still render.
+- If a stale bundle is suspected, clear site data / uninstall the home-screen app and reinstall before continuing.
+
 ## Post-Pass Documentation
 - Record what was validated, on which phone/browser, and any blockers discovered in `docs/sessions/`.
 - Update [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md) if the production phone pass changes the remaining release gates.
 
-## Explicitly Deferred
-- Add-to-home-screen and standalone PWA installability on iPhone.
-- Safari-specific installability work unless a browser issue forces earlier validation.
+## Remaining Follow-Up
+- Safari-specific install heuristics beyond the current add-to-home-screen guidance if real-device behavior differs from Chrome on iPhone.
+- Nicer installed-app update messaging if the production standalone pass exposes stale-service-worker confusion.

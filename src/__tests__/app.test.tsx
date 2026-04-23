@@ -41,11 +41,35 @@ import type { DoubleXPStatus } from '@/lib/types';
 import { shouldUseRedirectSignIn } from '@/lib/runtime';
 
 let currentDoubleXpStatus: DoubleXPStatus = { active: false, upcoming: false };
+let currentUserAgent =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/135.0.0.0 Safari/537.36';
+
+class MockBeforeInstallPromptEvent extends Event {
+  public prompt = vi.fn(async () => {});
+
+  public userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+
+  constructor(outcome: 'accepted' | 'dismissed' = 'accepted') {
+    super('beforeinstallprompt', { cancelable: true });
+    this.userChoice = Promise.resolve({
+      outcome,
+      platform: 'web',
+    });
+  }
+}
 
 function setOnlineState(isOnline: boolean) {
   Object.defineProperty(window.navigator, 'onLine', {
     configurable: true,
     value: isOnline,
+  });
+}
+
+function setUserAgent(userAgent: string) {
+  currentUserAgent = userAgent;
+  Object.defineProperty(window.navigator, 'userAgent', {
+    configurable: true,
+    get: () => currentUserAgent,
   });
 }
 
@@ -142,6 +166,9 @@ describe('Plan 03 app flow', () => {
     vi.useRealTimers();
     currentDoubleXpStatus = { active: false, upcoming: false };
     setOnlineState(true);
+    setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/135.0.0.0 Safari/537.36',
+    );
     window.history.pushState({}, '', '/');
     window.__SPARTAN_DEV_LOGS__?.clear();
   });
@@ -212,6 +239,41 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/redirect failed/i);
     await user.click(screen.getByRole('button', { name: /Dismiss/i }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('offers the browser install prompt on the auth screen when supported', async () => {
+    setInitialAuthState(null);
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+    const installEvent = new MockBeforeInstallPromptEvent('accepted');
+
+    render(<App />);
+
+    await act(async () => {
+      window.dispatchEvent(installEvent);
+    });
+
+    expect(await screen.findByRole('button', { name: /Install App/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Install App/i }));
+
+    expect(installEvent.prompt).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows iPhone add-to-home-screen guidance when the install prompt API is unavailable', async () => {
+    setInitialAuthState(null);
+    setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 Version/18.3 Mobile/15E148 Safari/604.1',
+    );
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: /Add To Home Screen/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/open the browser share menu and choose Add to Home Screen/i),
+    ).toBeInTheDocument();
   });
 
   it('promotes a successful redirect result even when the auth observer is delayed', async () => {

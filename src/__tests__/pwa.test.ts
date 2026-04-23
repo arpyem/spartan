@@ -3,12 +3,15 @@ import { pwaIncludeAssets, pwaManifest, pwaWorkbox } from '@/lib/pwa';
 describe('PWA config', () => {
   it('exposes the release manifest values from a single source of truth', () => {
     expect(pwaManifest).toMatchObject({
-      name: 'Spartan Gains',
-      short_name: 'SpartanGains',
+      id: '/',
+      name: 'Spartan',
+      short_name: 'Spartan',
       start_url: '/',
       scope: '/',
       display: 'standalone',
+      display_override: ['standalone', 'browser'],
       orientation: 'portrait',
+      prefer_related_applications: false,
       theme_color: '#0a0c0f',
       background_color: '#0a0c0f',
       lang: 'en',

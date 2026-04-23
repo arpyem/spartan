@@ -5,6 +5,7 @@ import { RouteLogger } from '@/components/RouteLogger';
 import { AppRoutes } from '@/router';
 import { AuthScreen } from '@/screens/AuthScreen';
 import { AuthSessionProvider, useAuthSession } from '@/hooks/useAuthSession';
+import { PwaSessionProvider } from '@/hooks/usePwaSession';
 import { devLog } from '@/lib/dev-logging';
 
 const DevLogPanel = import.meta.env.DEV
@@ -77,8 +78,10 @@ export default function App() {
   }, []);
 
   return (
-    <AuthSessionProvider>
-      <AppShell />
-    </AuthSessionProvider>
+    <PwaSessionProvider>
+      <AuthSessionProvider>
+        <AppShell />
+      </AuthSessionProvider>
+    </PwaSessionProvider>
   );
 }

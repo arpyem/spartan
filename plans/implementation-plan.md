@@ -1,7 +1,7 @@
-# Spartan Gains Implementation Plan
+# Spartan Implementation Plan
 
 ## Summary
-This document is the execution index for Spartan Gains. It translates the product and engineering rules from [spartans_spec.md](/C:/Users/rpmmi/Documents/spartan/spartans_spec.md) and [AGENTS.md](/C:/Users/rpmmi/Documents/spartan/AGENTS.md) into a milestone-driven delivery plan. The plan is dependency-ordered so the team builds stable foundations first, keeps game logic pure and testable, wires Firebase flows atomically, and treats the Halo 3-style progression ceremony as a release requirement rather than optional polish.
+This document is the execution index for Spartan. It translates the product and engineering rules from [spartans_spec.md](/C:/Users/rpmmi/Documents/spartan/spartans_spec.md) and [AGENTS.md](/C:/Users/rpmmi/Documents/spartan/AGENTS.md) into a milestone-driven delivery plan. The plan is dependency-ordered so the team builds stable foundations first, keeps game logic pure and testable, wires Firebase flows atomically, and treats the Halo 3-style progression ceremony as a release requirement rather than optional polish.
 
 The focused plans under `plans/` are intended to be drilled into one at a time. They are scoped by milestone, not by file inventory, so each document can drive a coherent slice of implementation from interfaces through testing and acceptance.
 

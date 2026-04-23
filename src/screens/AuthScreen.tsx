@@ -1,3 +1,4 @@
+import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { StatusBanner } from '@/components/StatusBanner';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -26,6 +27,9 @@ export function AuthScreen() {
                 Sign in with your Google account to restore the service record, live
                 progression feeds, and Tour shield history across devices.
               </p>
+              <div className="mt-6">
+                <PwaInstallBanner />
+              </div>
               {!isOnline ? (
                 <div className="mt-6">
                   <StatusBanner
