@@ -16,15 +16,16 @@ import { devLog, sanitizeErrorForDevLog } from '@/lib/dev-logging';
 import { RANKS, getRankFromXP, getRankProgress, getXpToNextRank } from '@/lib/ranks';
 import { getAppRuntime } from '@/lib/runtime';
 import { TRACKS_BY_KEY, isTrackKey } from '@/lib/tracks';
+import { getNextTourLevel, getTourLabel } from '@/lib/tours';
 import type { RankUpEvent, TourAdvanceEvent, TourLevel, TrackKey } from '@/lib/types';
 import { calculateXP, getBaseXP } from '@/lib/xp';
 
 function formatTourLabel(tour: TourLevel) {
-  return `Tour ${tour}`;
+  return getTourLabel(tour);
 }
 
 function buildTourAdvanceEvent(trackKey: TrackKey, currentTour: TourLevel): TourAdvanceEvent {
-  const nextTour = (currentTour + 1) as TourLevel;
+  const nextTour = getNextTourLevel(currentTour);
 
   return {
     track: trackKey,

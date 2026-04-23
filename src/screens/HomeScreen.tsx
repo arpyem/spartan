@@ -20,6 +20,7 @@ import {
   getXpToNextRank,
 } from '@/lib/ranks';
 import { TRACKS } from '@/lib/tracks';
+import { canAdvanceTour } from '@/lib/tours';
 
 export function HomeScreen() {
   const navigate = useNavigate();
@@ -203,7 +204,7 @@ export function HomeScreen() {
                   xp={progress.xp}
                   xpToNextRank={getXpToNextRank(progress.xp)}
                   doubleXPActive={doubleXpStatus.active}
-                  tourAdvanceAvailable={progress.xp >= 2000 && progress.tour < 5}
+                  tourAdvanceAvailable={canAdvanceTour(progress)}
                   onSelect={() => {
                     devLog.info('ui', 'track_card_selected', {
                       track: track.key,

@@ -25,6 +25,7 @@ import type {
   UserDoc,
   WorkoutDoc,
 } from '@/lib/types';
+import { TOUR_ADVANCEMENT_XP, canAdvanceTour, getNextTourLevel, MAX_TOUR_LEVEL } from '@/lib/tours';
 import { getBaseXP, isDoubleXPWeekend } from '@/lib/xp';
 
 export interface AppRuntime {
@@ -320,7 +321,7 @@ class E2EMockRuntime implements AppRuntime {
       xpAfter,
       tourBefore,
       tourAfter: tourBefore,
-      tourAdvanceAvailable: xpAfter >= 2000 && tourBefore < 5,
+      tourAdvanceAvailable: canAdvanceTour({ xp: xpAfter, tour: tourBefore }),
     };
   }
 
@@ -333,15 +334,15 @@ class E2EMockRuntime implements AppRuntime {
 
     this.assertUserDocExists();
 
-    if (input.currentTrack.xp < 2000) {
+    if (input.currentTrack.xp < TOUR_ADVANCEMENT_XP) {
       throw new RangeError('Track has not reached the Tour advancement threshold.');
     }
 
-    if (input.currentTrack.tour >= 5) {
+    if (input.currentTrack.tour >= MAX_TOUR_LEVEL) {
       throw new RangeError('Track is already at the maximum Tour.');
     }
 
-    const nextTour = (input.currentTrack.tour + 1) as AdvanceTourResult['nextTour'];
+    const nextTour = getNextTourLevel(input.currentTrack.tour) as AdvanceTourResult['nextTour'];
 
     this.userDoc = {
       ...this.userDoc!,

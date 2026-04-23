@@ -75,7 +75,7 @@ export function TourAdvancePrompt({
           >
             <div className="service-strip">
               <span className="service-label">Tour threshold reached</span>
-              <span className="service-label">Prestige confirmation</span>
+              <span className="service-label">{event.nextTourLabel}</span>
             </div>
             <h2
               id={titleId}
@@ -93,7 +93,7 @@ export function TourAdvancePrompt({
             </p>
 
             <div className="service-well mt-5 px-4 py-3 text-sm text-[var(--color-text)]">
-              {event.previousRankName} retires. {event.nextTourLabel} unlocks on
+              {event.previousRankName} retires. The {event.nextTourLabel} shield unlocks on
               confirm.
             </div>
 

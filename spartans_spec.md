@@ -5,7 +5,7 @@
 
 ## Overview
 
-Five independent rank tracks (Cardio, Legs, Push, Pull, Core) each with the full authentic Halo 3 EXP ladder — Recruit through 5-Star General. A sixth composite **Global Rank** is the average of all five tracks. Each track supports up to **5 Prestiges** so progression never stops. Double XP weekends fire on a deterministic schedule.
+Five independent rank tracks (Cardio, Legs, Push, Pull, Core) each with the full authentic Halo 3 EXP ladder — Recruit through 5-Star General. A sixth composite **Global Rank** is the average of all five tracks. Each track supports a six-tier Tour ladder: Base, Bronze, Silver, Gold, Platinum, and Diamond. Double XP weekends fire on a deterministic schedule.
 
 ---
 
@@ -46,7 +46,7 @@ users/{uid}
   createdAt:       timestamp
 
   tracks: {
-    cardio: { xp: number, tour: number }   // tour 1–5, starts at 1
+    cardio: { xp: number, tour: number }   // tour 1–6, starts at 1
     legs:   { xp: number, tour: number }
     push:   { xp: number, tour: number }
     pull:   { xp: number, tour: number }
@@ -170,18 +170,19 @@ Directly adapted from the **Halo: MCC Tour system** — the faithful Bungie impl
 
 | Tour | Shield Style | Color / Feel |
 |---|---|---|
-| 1 | No shield — bare emblem | Raw recruit |
-| 2 | Angular kite shield | Bronze — committed |
-| 3 | Heater shield | Silver — veteran |
-| 4 | Ornate heater shield | Gold — elite |
-| 5 | Full heater shield with trim | Onyx + gold — legendary |
+| 1 | No shield — bare emblem | Base — unprestiged |
+| 2 | Compact beveled shield | Bronze — committed |
+| 3 | Refined shield with cool rim | Silver — veteran |
+| 4 | Brighter trim and crown edge | Gold — elite |
+| 5 | Sharper alloy shell | Platinum — mythic |
+| 6 | Platinum-derived shield with crystalline accents | Diamond — maxed |
 
 Tours are per-track and fully independent. A user can be Tour 4 in Lifting and Tour 1 in Core simultaneously.
 
 ### Tour Advancement Flow
 - At 5-Star General (2,000 XP): a "TOUR ADVANCEMENT AVAILABLE" banner pulses on that track's card
 - User taps to confirm — shows a preview of the new shield they'll earn
-- `xp` resets to `0`, `tour` increments by 1 (max 5)
+- `xp` resets to `0`, `tour` increments by 1 (max 6)
 - Full-screen Tour advancement animation plays (distinct from rank-up): shield materializes from the center outward, new shield slot fills in
 - Track card immediately re-renders with the new shield behind the (now Recruit) emblem
 
@@ -293,7 +294,7 @@ Triggered by an info icon (ⓘ) in the top-right corner of home screen.
 **Sections:**
 1. **Account** — Google avatar, display name, email, member since date
 2. **Your Stats** — total workouts logged, breakdown by track (e.g., "47 cardio sessions · 312 total minutes")
-3. **Tour Status** — current Tour per track (1–5), with shield preview icons
+3. **Tour Status** — current Tour per track (1–6), with shield preview icons
 4. **Full Rank Table** — all 42 ranks with EXP thresholds, current rank highlighted
 5. **Double XP Schedule** — brief explanation of the weekend system
 6. **Sign Out** button
@@ -306,11 +307,11 @@ Each of the 42 ranks needs an SVG emblem component. These should be faithful rec
 
 **Emblem component signature:**
 ```tsx
-<RankEmblem rankId={number} tour={1|2|3|4|5} size={number} />
+<RankEmblem rankId={number} tour={1|2|3|4|5|6} size={number} />
 ```
 
 Tour 1 = bare emblem, no shield
-Tour 2–5 = shield SVG rendered behind rank icon, upgrading per tier
+Tour 2–6 = shield SVG rendered behind rank icon, upgrading per tier
 
 ```tsx
 // Internal structure
@@ -322,10 +323,11 @@ Tour 2–5 = shield SVG rendered behind rank icon, upgrading per tier
 
 **Shield color palette:**
 - Tour 1: no shield
-- Tour 2 (Bronze): `#cd7f32` fill, `#a0522d` stroke
-- Tour 3 (Silver): `#c0c0c0` fill, `#808080` stroke
-- Tour 4 (Gold): `#ffd700` fill, `#b8860b` stroke
-- Tour 5 (Onyx): `#1a1a2e` fill, `#ffd700` stroke + gold trim detail
+- Tour 2 (Bronze): `#b9855a` stroke over a matte bronze shell
+- Tour 3 (Silver): `#c7d2de` stroke over a cool steel shell
+- Tour 4 (Gold): `#f0c45b` stroke over a warm alloy shell
+- Tour 5 (Platinum): `#dae4f2` stroke over a sharp platinum shell
+- Tour 6 (Diamond): `#dff3ff` stroke with icy crystalline accents
 
 **Color palette:**
 - Enlisted ranks (0–13): silver/grey palette
@@ -408,7 +410,7 @@ spartan-gains/
 │   │   └── firestore.ts     # logWorkout(), getUserData(), advanceTour()
 │   ├── components/
 │   │   ├── RankEmblem.tsx   # SVG emblem + ShieldBackground layer
-│   │   ├── ShieldBackground.tsx  # Tour shield SVG (Tour 1 = none, 2–5 = bronze/silver/gold/onyx)
+│   │   ├── ShieldBackground.tsx  # Tour shield SVG (Tour 1 = none, 2–6 = bronze/silver/gold/platinum/diamond)
 │   │   ├── XPBar.tsx        # Animated XP progress bar
 │   │   ├── TrackCard.tsx    # Single track emblem + bar for home screen
 │   │   ├── GlobalRank.tsx   # Large center composite rank display
@@ -465,7 +467,7 @@ Build in this sequence — each step is independently testable:
 3. **Firebase project** — create project, enable Google Auth, create Firestore database, add `.env`.
 4. **`src/lib/firebase.ts` + `src/lib/firestore.ts`** — init, auth helpers, `logWorkout()`, `getUserData()`, `prestige()`.
 5. **`AuthScreen.tsx`** — Google sign-in button, handles first-time user document creation.
-6. **`ShieldBackground.tsx` + `RankEmblem.tsx`** — Build the 5 shield SVGs first (simple geometric shapes), then all 42 rank icons. Compose them via the `<RankEmblem>` wrapper. Start simple (chevrons/bars), refine later.
+6. **`ShieldBackground.tsx` + `RankEmblem.tsx`** — Build the 6 Tour states first (Base plus five shield-backed prestige tiers), then all 42 rank icons. Compose them via the `<RankEmblem>` wrapper. Start simple (chevrons/bars), refine later.
 7. **`XPBar.tsx` + `TrackCard.tsx`** — Static display components, no data yet.
 8. **`HomeScreen.tsx`** — Wire up real data via `useUserData` hook. All five tracks + global rank.
 9. **`LogScreen.tsx`** — Input + XP preview + submit flow.
@@ -483,7 +485,7 @@ Build in this sequence — each step is independently testable:
 - `useUserData` should use Firestore's `onSnapshot` for real-time updates so the XP bar reacts immediately after a workout is logged.
 - The `logWorkout()` Firestore write should use a **batch write** to update both the workout subcollection document and the parent user's `tracks.{track}.xp` field atomically.
 - Rank-up detection: compare `getRankFromXP(xpBefore).id` vs `getRankFromXP(xpAfter).id` in the log flow — if they differ, trigger the modal.
-- Tour advancement detection: after a workout write, if `xpAfter >= 2000` and `track.tour < 5`, surface the `TourModal` — don't auto-advance, let the user confirm so the moment feels deliberate.
+- Tour advancement detection: after a workout write, if `xpAfter >= 2000` and `track.tour < 6`, surface the `TourModal` — don't auto-advance, let the user confirm so the moment feels deliberate.
 - The `advanceTour()` Firestore call should batch-write `xp → 0` and `tour → tour + 1` atomically.
 - Double XP weekends are fully client-side deterministic — no Firestore field needed. Just call `isDoubleXPWeekend(new Date())` at log time and store the result in the workout document for history display.
 - For the SVG emblems: prioritize getting all 42 shapes in place first (even simplified), then refine aesthetics. A placeholder grey circle with the rank number is acceptable during early development.

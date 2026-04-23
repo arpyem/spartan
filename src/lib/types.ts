@@ -1,5 +1,6 @@
 export type TrackKey = 'cardio' | 'legs' | 'push' | 'pull' | 'core';
-export type TourLevel = 1 | 2 | 3 | 4 | 5;
+export type TourLevel = 1 | 2 | 3 | 4 | 5 | 6;
+export type TourMaterial = 'none' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 export type DevLogLevel = 'debug' | 'info' | 'warn' | 'error';
 export type DevLogCategory =
   | 'app'

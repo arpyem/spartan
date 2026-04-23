@@ -2,6 +2,7 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 import type { TourLevel } from '@/lib/types';
 import { ShieldBackground } from '@/components/ShieldBackground';
+import { getTourMaterial, hasTourShield } from '@/lib/tours';
 
 interface RankEmblemProps {
   rankId: number;
@@ -99,15 +100,15 @@ function getRankAssetUrl(rankId: number) {
 }
 
 function getStageMetrics(tour: TourLevel) {
-  if (tour > 1) {
+  if (hasTourShield(tour)) {
     return {
       plateCx: 50,
       plateCy: 49,
-      plateRx: 23.5,
-      plateRy: 23,
-      glyphX: 24,
-      glyphY: 22,
-      glyphSize: 52,
+      plateRx: 21.4,
+      plateRy: 20.9,
+      glyphX: 25.4,
+      glyphY: 23.6,
+      glyphSize: 49.2,
     };
   }
 
@@ -147,6 +148,7 @@ export function RankEmblem({ rankId, tour, size = 72 }: RankEmblemProps) {
   const gradientId = useId().replace(/:/g, '-');
   const metrics = getStageMetrics(tour);
   const backlightOpacity = size >= 96 ? 0.32 : 0.24;
+  const shieldActive = hasTourShield(tour);
 
   return (
     <span
@@ -166,7 +168,8 @@ export function RankEmblem({ rankId, tour, size = 72 }: RankEmblemProps) {
         data-testid="rank-emblem"
         data-rank-id={normalizedRankId}
         data-tour={tour}
-        data-shield={tour > 1 ? 'on' : 'off'}
+        data-shield={shieldActive ? 'on' : 'off'}
+        data-tour-material={getTourMaterial(tour)}
         viewBox="0 0 100 100"
         width={size}
         height={size}

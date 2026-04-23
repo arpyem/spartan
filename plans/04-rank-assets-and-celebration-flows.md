@@ -5,7 +5,7 @@ This milestone is the product-defining pass. It turns the functional app into a 
 
 ## Implementation Plan
 ### Rank Asset System
-- Build `ShieldBackground.tsx` for tours 2 through 5 using the distinct shield silhouettes and palettes from the spec.
+- Build `ShieldBackground.tsx` for tours 2 through 6 using a restrained single-family shield progression: Bronze, Silver, Gold, Platinum, and Diamond.
 - Build `RankEmblem.tsx` as the composition layer that renders the shield behind the rank icon when `tour > 1`.
 - Implement all 42 rank icons as geometric SVG recreations grouped by enlisted, officer, and general tiers to keep the asset system maintainable.
 - Use placeholders only as temporary development scaffolding; define a cleanup checkpoint before this milestone is considered complete.
@@ -39,7 +39,7 @@ This milestone is the product-defining pass. It turns the functional app into a 
 - `src/components/TourModal.tsx`
 
 ## Acceptance Criteria
-- The app has a complete strategy for all 42 emblems and all 5 tour shields.
+- The app has a complete strategy for all 42 emblems and all 6 Tour states, with five prestige shield tiers beyond Base.
 - XP bar transitions feel alive and game-like, including Double XP variants.
 - Rank-up animation includes every required beat from the docs and feels fast, bright, and rewarding.
 - Tour advancement feels rarer, darker, longer, and more ceremonial than rank-up.

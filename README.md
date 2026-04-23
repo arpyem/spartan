@@ -1,6 +1,6 @@
 # Spartan Gains
 
-Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across Cardio, Legs, Push, Pull, and Core, earn EXP against the Halo 3 rank ladder, and eventually prestige each track with Tour shields. The project is still in active build-out, so this repository is both the app source and the execution guide for the remaining milestones.
+Spartan Gains is a Halo 3-themed workout tracker PWA. Users log workouts across Cardio, Legs, Push, Pull, and Core, earn EXP against the Halo 3 rank ladder, and eventually prestige each track through a six-tier Tour ladder: Base, Bronze, Silver, Gold, Platinum, and Diamond. The project is still in active build-out, so this repository is both the app source and the execution guide for the remaining milestones.
 
 https://www.halopedia.org/Rank_(Halo_3)
 
@@ -8,10 +8,10 @@ https://www.halopedia.org/Rank_(Halo_3)
 - Plan 01 is complete: the repo now has a working React/Vite/Tailwind/Firebase foundation, route shell, test harness, and PWA baseline.
 - Plan 02 is complete: rank math, XP rules, deterministic Double XP state, Firestore write contracts, auth bootstrap helpers, and real-time hook boundaries are now implemented and tested.
 - Plan 03 is complete: Google redirect auth, live home and log screens, real-time workout aggregates, info modal data, and rank-up/Tour prompt plumbing are now implemented and tested.
-- Plan 04 is complete: the app now has production-facing emblem/shield compositions, weighted XP bar treatment, a dedicated Tour confirmation prompt, and distinct rank-up/Tour celebration ceremonies.
-- Plan 05 is active: offline-aware UX, stale-data handling, modal accessibility, reduced-motion support, split production bundles, hosting config, release documentation, Playwright mobile smoke coverage, the Halo 3 service-record visual fidelity reskin, the home/log UX refinement pass, and the latest home header/global-rank cleanup are now implemented.
+- Plan 04 is complete: the app now has production-facing emblem/shield compositions, the six-tier Base-through-Diamond Tour ladder, weighted XP bar treatment, a dedicated Tour confirmation prompt, and distinct rank-up/Tour celebration ceremonies.
+- Plan 05 is active: offline-aware UX, stale-data handling, modal accessibility, reduced-motion support, split production bundles, hosting config, release documentation, Playwright mobile smoke coverage, the Halo 3 service-record visual fidelity reskin, the home/log UX refinement pass, the latest home header/global-rank cleanup, and the single-scroll service-record sheet refinement are now implemented.
 - Plan 06 is complete: setup review remediation now hardens first-sign-in profile bootstrap retries and keeps rank-up ceremonies aligned with the active Tour shield.
-- The current app now includes the full progression ceremony loop, the Halo 3 service-record visual treatment, automatic return-home after resolved log flows, a visual-first home dashboard with a dominant Global Rank hero, compact status rails, and tile-based track cards, plus release-hardening code. The remaining work is the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md), especially 390px/mobile QA, offline shell verification, and final installability review.
+- The current app now includes the full progression ceremony loop, the Halo 3 service-record visual treatment, a single-scroll service-record sheet with an in-flow full rank table, the six-tier Tour shield progression from Base through Diamond, automatic return-home after resolved log flows, a visual-first home dashboard with a dominant Global Rank hero, compact status rails, and tile-based track cards, plus release-hardening code. The remaining work is the manual release checklist in [docs/release-checklist.md](/C:/Users/rpmmi/Documents/spartan/docs/release-checklist.md), especially 390px/mobile QA, offline shell verification, and final installability review.
 
 ## Repo Structure
 - `src/lib`
@@ -114,8 +114,8 @@ This table is the project-level status source for the implementation plans.
 | [01 Foundation And Tooling](/C:/Users/rpmmi/Documents/spartan/plans/01-foundation-and-tooling.md) | App shell, routing, theme, env contract, Firebase surface, test/PWA baseline | Complete |
 | [02 Progression And Data Model](/C:/Users/rpmmi/Documents/spartan/plans/02-progression-and-data-model.md) | Rank logic, XP economy, Firestore model, auth bootstrap, atomic write flows | Complete |
 | [03 Core App Surfaces](/C:/Users/rpmmi/Documents/spartan/plans/03-core-app-surfaces.md) | Auth, home, log flow, info modal, real-time UI wiring | Complete |
-| [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, shields, XP bar feel, rank-up and tour ceremonies | Complete |
-| [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, Playwright smoke coverage, offline UX, accessibility, Halo 3 visual fidelity, home/log UX refinement, home header/global-rank cleanup, PWA completion, release readiness | Active |
+| [04 Rank Assets And Celebration Flows](/C:/Users/rpmmi/Documents/spartan/plans/04-rank-assets-and-celebration-flows.md) | Emblems, six-tier Tour shield ladder, XP bar feel, rank-up and tour ceremonies | Complete |
+| [05 Quality, PWA, And Release](/C:/Users/rpmmi/Documents/spartan/plans/05-quality-pwa-and-release.md) | Test hardening, Playwright smoke coverage, offline UX, accessibility, Halo 3 visual fidelity, home/log UX refinement, home header/global-rank cleanup, service-record sheet refinement, PWA completion, release readiness | Active |
 | [06 Setup Review Remediation](/C:/Users/rpmmi/Documents/spartan/plans/06-setup-review-remediation.md) | Bootstrap retry hardening, Tour-correct rank-up ceremony state, review follow-up tests/docs | Complete |
 
 Status meanings:

@@ -26,7 +26,7 @@ Lock the game's rules before heavy UI work begins. This milestone covers rank ma
 
 ### Atomic Write Flows
 - Define `logWorkout()` so it batches workout history creation and parent track XP update atomically.
-- Define `advanceTour()` so it batches `xp -> 0` and `tour -> tour + 1` atomically, capped at tour 5.
+- Define `advanceTour()` so it batches `xp -> 0` and `tour -> tour + 1` atomically, capped at tour 6 so the ladder can reach Diamond.
 - Document the payloads these functions return so the log flow can compare `xpBefore` and `xpAfter` for rank-up and tour-available detection without adding duplicate reads.
 
 ### Hook Contracts

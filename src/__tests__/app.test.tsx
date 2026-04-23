@@ -112,7 +112,7 @@ vi.mock('virtual:pwa-register', () => ({
 
 function seedSignedInState(
   user: User = createMockUser(),
-  trackOverrides: Partial<Record<'cardio' | 'legs' | 'push' | 'pull' | 'core', { xp: number; tour: 1 | 2 | 3 | 4 | 5 }>> = {},
+  trackOverrides: Partial<Record<'cardio' | 'legs' | 'push' | 'pull' | 'core', { xp: number; tour: 1 | 2 | 3 | 4 | 5 | 6 }>> = {},
 ) {
   setInitialAuthState(user);
   seedDoc(`users/${user.uid}`, {
@@ -496,7 +496,7 @@ describe('Plan 03 app flow', () => {
 
   it('surfaces Tour advancement, confirms it, and then plays the ceremony', async () => {
     const userModel = seedSignedInState(createMockUser(), {
-      cardio: { xp: 1999, tour: 1 },
+      cardio: { xp: 1999, tour: 5 },
     });
     seedCollection(`users/${userModel.uid}/workouts`, []);
     window.history.pushState({}, '', '/log/cardio');
@@ -514,13 +514,13 @@ describe('Plan 03 app flow', () => {
     await waitFor(() => {
       expect(getStoredDoc(`users/${userModel.uid}`)?.data).toMatchObject({
         tracks: {
-          cardio: { xp: 0, tour: 2 },
+          cardio: { xp: 0, tour: 6 },
         },
       });
     });
 
     expect(await screen.findByText(/Tour Advanced/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /^Tour 2$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Diamond Tour$/i })).toBeInTheDocument();
     expect(screen.getByText(/Cardio reset to Recruit/i)).toBeInTheDocument();
     expect(
       await screen.findByText(/Tap anywhere to continue/i, {}, { timeout: 5000 }),
@@ -531,7 +531,7 @@ describe('Plan 03 app flow', () => {
 
   it('keeps the Tour confirmation prompt open when the advancement write fails', async () => {
     const userModel = seedSignedInState(createMockUser(), {
-      cardio: { xp: 1999, tour: 1 },
+      cardio: { xp: 1999, tour: 5 },
     });
     seedCollection(`users/${userModel.uid}/workouts`, []);
     window.history.pushState({}, '', '/log/cardio');
@@ -554,7 +554,7 @@ describe('Plan 03 app flow', () => {
 
   it('returns home when Tour advancement is deferred', async () => {
     const userModel = seedSignedInState(createMockUser(), {
-      cardio: { xp: 1999, tour: 1 },
+      cardio: { xp: 1999, tour: 5 },
     });
     seedCollection(`users/${userModel.uid}/workouts`, []);
     window.history.pushState({}, '', '/log/cardio');
@@ -652,5 +652,28 @@ describe('Plan 03 app flow', () => {
         'post_log_return_home_started',
       ]),
     );
+  });
+
+  it('does not surface another Tour advancement prompt once a track is already diamond max', async () => {
+    const userModel = seedSignedInState(createMockUser(), {
+      cardio: { xp: 1999, tour: 6 },
+    });
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    window.history.pushState({}, '', '/log/cardio');
+    const { default: App } = await import('@/App');
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText(/Enter minutes/i), '10');
+    await user.click(screen.getByRole('button', { name: /Log It/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Advance Cardio/i)).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Tour Advanced/i)).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }, { timeout: 5000 }),
+    ).toBeInTheDocument();
   });
 });

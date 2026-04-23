@@ -144,10 +144,10 @@ describe('firestore helpers', () => {
   });
 
   it('advances a Tour atomically and enforces the Tour gates', async () => {
-    const { advanceTour } = await import('@/lib/firestore');
+    const { advanceTour, logWorkout } = await import('@/lib/firestore');
     seedDoc('users/spartan-117', {
       tracks: {
-        cardio: { xp: 2000, tour: 1 },
+        cardio: { xp: 2000, tour: 5 },
       },
     });
 
@@ -155,18 +155,18 @@ describe('firestore helpers', () => {
       advanceTour({
         uid: 'spartan-117',
         track: 'cardio',
-        currentTrack: { xp: 2000, tour: 1 },
+        currentTrack: { xp: 2000, tour: 5 },
       }),
     ).resolves.toEqual({
-      previousTour: 1,
-      nextTour: 2,
+      previousTour: 5,
+      nextTour: 6,
       xpBefore: 2000,
       xpAfter: 0,
     });
 
     expect(getStoredDoc('users/spartan-117')?.data).toMatchObject({
       tracks: {
-        cardio: { xp: 0, tour: 2 },
+        cardio: { xp: 0, tour: 6 },
       },
     });
 
@@ -179,10 +179,40 @@ describe('firestore helpers', () => {
     ).rejects.toThrow(/threshold/i);
 
     await expect(
+      logWorkout({
+        uid: 'spartan-117',
+        track: 'cardio',
+        value: 10,
+        currentTrack: { xp: 1999, tour: 5 },
+        now: new Date('2026-04-08T12:00:00.000Z'),
+      }),
+    ).resolves.toMatchObject({
+      xpBefore: 1999,
+      xpAfter: 2000,
+      tourBefore: 5,
+      tourAdvanceAvailable: true,
+    });
+
+    await expect(
+      logWorkout({
+        uid: 'spartan-117',
+        track: 'cardio',
+        value: 10,
+        currentTrack: { xp: 1999, tour: 6 },
+        now: new Date('2026-04-08T12:00:00.000Z'),
+      }),
+    ).resolves.toMatchObject({
+      xpBefore: 1999,
+      xpAfter: 2000,
+      tourBefore: 6,
+      tourAdvanceAvailable: false,
+    });
+
+    await expect(
       advanceTour({
         uid: 'spartan-117',
         track: 'cardio',
-        currentTrack: { xp: 2000, tour: 5 },
+        currentTrack: { xp: 2000, tour: 6 },
       }),
     ).rejects.toThrow(/maximum Tour/i);
   });

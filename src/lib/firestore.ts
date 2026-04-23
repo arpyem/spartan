@@ -15,12 +15,12 @@ import type {
   AppUser,
   LogWorkoutInput,
   LogWorkoutResult,
-  TourLevel,
   TracksMap,
   UserDoc,
   WorkoutDoc,
 } from '@/lib/types';
 import { TRACKS } from '@/lib/tracks';
+import { TOUR_ADVANCEMENT_XP, canAdvanceTour, getNextTourLevel, MAX_TOUR_LEVEL } from '@/lib/tours';
 import { calculateXP, isDoubleXPWeekend } from '@/lib/xp';
 
 export function createInitialTracks(): TracksMap {
@@ -131,26 +131,22 @@ export async function logWorkout(
     xpAfter,
     tourBefore,
     tourAfter: tourBefore,
-    tourAdvanceAvailable: xpAfter >= 2000 && tourBefore < 5,
+    tourAdvanceAvailable: canAdvanceTour({ xp: xpAfter, tour: tourBefore }),
   };
-}
-
-function toNextTour(currentTour: TourLevel): TourLevel {
-  return (currentTour + 1) as TourLevel;
 }
 
 export async function advanceTour(
   input: AdvanceTourInput,
 ): Promise<AdvanceTourResult> {
-  if (input.currentTrack.xp < 2000) {
+  if (input.currentTrack.xp < TOUR_ADVANCEMENT_XP) {
     throw new RangeError('Track has not reached the Tour advancement threshold.');
   }
 
-  if (input.currentTrack.tour >= 5) {
+  if (input.currentTrack.tour >= MAX_TOUR_LEVEL) {
     throw new RangeError('Track is already at the maximum Tour.');
   }
 
-  const nextTour = toNextTour(input.currentTrack.tour);
+  const nextTour = getNextTourLevel(input.currentTrack.tour);
   const userRef = getUserRef(input.uid);
   const { db } = getFirebaseServices();
   const batch = writeBatch(db);

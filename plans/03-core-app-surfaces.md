@@ -24,7 +24,7 @@ Deliver the functional app loop: authentication, home screen readouts, track nav
 - Show live XP preview as the user types, including doubled formatting during active Double XP periods.
 - Add optional workout note input.
 - On submit, call the Firestore logging helper, derive rank-up by comparing old and new rank ids, and surface the correct UI event payloads for later celebration components.
-- Surface the tour-available prompt when `xpAfter >= 2000` and the user is below tour 5, but do not auto-advance.
+- Surface the tour-available prompt when `xpAfter >= 2000` and the user is below tour 6, but do not auto-advance.
 
 ### Info Surface
 - Build `InfoModal.tsx` as a slide-up sheet with account, stats, tour status, full rank table, Double XP explanation, and sign-out sections.
@@ -58,7 +58,7 @@ Deliver the functional app loop: authentication, home screen readouts, track nav
 - Track card tap navigates to the correct `/log/:track` route.
 - Log screen preview updates as users change minutes or sets.
 - Submit flow triggers the Firestore helper and shows a rank-up modal trigger when the threshold is crossed.
-- Submit flow surfaces a tour-available prompt when the post-write XP reaches 2000 and tour is below 5.
+- Submit flow surfaces a tour-available prompt when the post-write XP reaches 2000 and tour is below 6.
 - Info modal opens, closes, and renders the required section headers.
 
 ## Assumptions

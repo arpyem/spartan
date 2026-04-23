@@ -6,7 +6,7 @@ This file governs how agents work on this codebase. Read it fully before writing
 
 ## What This Project Is
 
-A Halo 3-themed workout tracker PWA. Users log workouts, earn EXP, and rank up across five independent training tracks (Cardio, Legs, Push, Pull, Core) using the authentic Halo 3 EXP ladder. A composite Global Rank averages all five. Each track supports 5 Tours (prestige system adapted from Halo MCC). Double XP weekends fire on a deterministic client-side schedule.
+A Halo 3-themed workout tracker PWA. Users log workouts, earn EXP, and rank up across five independent training tracks (Cardio, Legs, Push, Pull, Core) using the authentic Halo 3 EXP ladder. A composite Global Rank averages all five. Each track supports 6 Tour tiers: Base, Bronze, Silver, Gold, Platinum, and Diamond. Double XP weekends fire on a deterministic client-side schedule.
 
 The full product spec lives in `SPARTAN-GAINS-SPEC.md`. Read it before touching any feature area.
 
@@ -339,7 +339,7 @@ All 42 rank SVGs must be implemented. Do not ship placeholder circles to product
 - Search: `"Halo 3 rank icons all" site:halopedia.org` or `"Halo 3 rank emblems SVG"`
 - The Halopedia rank page (https://www.halopedia.org/Rank_(Halo_3)) has emblem images for each rank — use these as shape references, then recreate geometrically in SVG. Do not hotlink external images.
 
-The five Tour shields must be clearly distinct from each other. When a user is Tour 5, their emblem should look visually impressive at a glance.
+The five prestige shield states beyond Base must be clearly distinct from each other. When a user reaches Diamond Tour, their emblem should look visually impressive at a glance.
 
 ### `RankUpModal.tsx`
 This is the most important moment in the app. It must:

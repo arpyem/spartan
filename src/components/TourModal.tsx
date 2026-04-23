@@ -5,6 +5,7 @@ import { RankEmblem } from '@/components/RankEmblem';
 import { ShieldBackground } from '@/components/ShieldBackground';
 import { useDialogSurface } from '@/hooks/useDialogSurface';
 import { devLog } from '@/lib/dev-logging';
+import { getTourName } from '@/lib/tours';
 
 interface TourModalProps {
   event: TourAdvanceEvent | null;
@@ -252,8 +253,8 @@ export function TourModal({ event, onClose }: TourModalProps) {
                   id={descriptionId}
                   className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]"
                 >
-                  {event.trackLabel} reset to {event.nextRankName} beneath a permanent
-                  new shield.
+                  {event.trackLabel} reset to {event.nextRankName} beneath the permanent{' '}
+                  {getTourName(event.nextTour).toLowerCase()} shield.
                 </p>
                 <p
                   role="status"
