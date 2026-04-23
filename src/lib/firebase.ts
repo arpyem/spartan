@@ -21,6 +21,33 @@ export interface FirebaseServices {
 
 let cachedServices: FirebaseServices | null = null;
 
+export function resolveFirebaseAuthDomain(defaultAuthDomain: string): string {
+  if (typeof window === 'undefined') {
+    return defaultAuthDomain;
+  }
+
+  const currentHost = window.location.host.trim();
+
+  if (!currentHost) {
+    return defaultAuthDomain;
+  }
+
+  const normalizedDefault = defaultAuthDomain.trim().toLowerCase();
+  const normalizedHost = currentHost.toLowerCase();
+  const isLocalHost = normalizedHost === 'localhost'
+    || normalizedHost.startsWith('localhost:')
+    || normalizedHost === '127.0.0.1'
+    || normalizedHost.startsWith('127.0.0.1:');
+
+  if (isLocalHost || normalizedHost === normalizedDefault) {
+    return defaultAuthDomain;
+  }
+
+  // Redirect auth should use the active Hosting origin on production domains so
+  // the auth helper and app stay same-origin on browsers with storage partitioning.
+  return currentHost;
+}
+
 export function getFirebaseServices(): FirebaseServices {
   if (cachedServices) {
     return cachedServices;
@@ -29,7 +56,7 @@ export function getFirebaseServices(): FirebaseServices {
   const firebaseEnv = getFirebaseEnv();
   const firebaseApp = initializeApp({
     apiKey: firebaseEnv.apiKey,
-    authDomain: firebaseEnv.authDomain,
+    authDomain: resolveFirebaseAuthDomain(firebaseEnv.authDomain),
     projectId: firebaseEnv.projectId,
     storageBucket: firebaseEnv.storageBucket,
     messagingSenderId: firebaseEnv.messagingSenderId,

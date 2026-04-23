@@ -21,4 +21,5 @@ export const pwaIncludeAssets = ['icons/icon-192.png', 'icons/icon-512.png'];
 export const pwaWorkbox = {
   globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
   navigateFallback: 'index.html',
+  navigateFallbackDenylist: [/^\/__\//],
 };

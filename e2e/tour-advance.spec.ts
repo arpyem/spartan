@@ -29,7 +29,7 @@ test('prompts for Tour advancement, commits it, and returns home after the cerem
   await page.getByRole('button', { name: 'Advance Tour' }).click();
 
   await expect(page.getByText('Tour Advanced')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tour 2' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bronze Tour' })).toBeVisible();
   await expect(page.getByText(/Cardio reset to Recruit/i)).toBeVisible();
   await expect(page.getByText(/Tap anywhere to continue/i)).toBeVisible();
 

@@ -24,5 +24,6 @@ describe('PWA config', () => {
     expect(pwaIncludeAssets).toEqual(['icons/icon-192.png', 'icons/icon-512.png']);
     expect(pwaWorkbox.navigateFallback).toBe('index.html');
     expect(pwaWorkbox.globPatterns).toContain('**/*.{js,css,html,ico,png,svg,woff2}');
+    expect(pwaWorkbox.navigateFallbackDenylist).toEqual([/^\/__\//]);
   });
 });

@@ -19,6 +19,7 @@ import type { AppUser } from '@/lib/types';
 type AuthSessionStatus = 'loading' | 'signed_out' | 'signed_in';
 type BusyAction = 'sign_in' | 'sign_out' | null;
 export type BootstrapStatus = 'idle' | 'running' | 'ready' | 'error';
+const AUTH_INIT_TIMEOUT_MS = 6000;
 
 interface AuthSessionContextValue {
   status: AuthSessionStatus;
@@ -151,6 +152,29 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     mountedRef.current = true;
     devLog.info('auth', 'redirect_result_started');
 
+    const authInitTimeout = window.setTimeout(() => {
+      if (!mountedRef.current || authUserRef.current) {
+        return;
+      }
+
+      const currentUser = appRuntime.getCurrentUser();
+
+      if (currentUser) {
+        devLog.warn('auth', 'auth_state_change_delayed_recovered', {
+          user: summarizeAuthUserForDevLog(currentUser),
+        });
+        authUserRef.current = currentUser;
+        setUser(currentUser);
+        setStatus('signed_in');
+        void bootstrapUser(currentUser);
+        return;
+      }
+
+      devLog.warn('auth', 'auth_init_timed_out');
+      setStatus('signed_out');
+      setError('Firebase auth took too long to initialize. Retry sign-in. If this keeps happening on your phone, clear site data and try again.');
+    }, AUTH_INIT_TIMEOUT_MS);
+
     void appRuntime.getRedirectResult()
       .then(async (result) => {
         devLog.info('auth', 'redirect_result_succeeded', {
@@ -158,7 +182,25 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
           user: summarizeAuthUserForDevLog(result),
         });
         if (result && mountedRef.current) {
+          authUserRef.current = result;
+          setUser(result);
+          setStatus('signed_in');
           await bootstrapUser(result);
+          return;
+        }
+
+        if (!result && mountedRef.current && !authUserRef.current) {
+          const currentUser = appRuntime.getCurrentUser();
+
+          if (currentUser) {
+            devLog.warn('auth', 'redirect_result_missing_current_user_recovered', {
+              user: summarizeAuthUserForDevLog(currentUser),
+            });
+            authUserRef.current = currentUser;
+            setUser(currentUser);
+            setStatus('signed_in');
+            await bootstrapUser(currentUser);
+          }
         }
       })
       .catch((nextError) => {
@@ -200,6 +242,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       devLog.debug('auth', 'auth_listener_unsubscribed');
       mountedRef.current = false;
+      window.clearTimeout(authInitTimeout);
       unsubscribe();
     };
   }, [appRuntime, bootstrapUser, resetBootstrapState]);

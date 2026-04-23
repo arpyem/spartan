@@ -6,10 +6,11 @@ export function AuthScreen() {
   const { isOnline } = useNetworkStatus();
   const { busyAction, clearError, error, signInWithGoogle } = useAuthSession();
   const isSignInDisabled = busyAction === 'sign_in' || !isOnline;
+  const signInLabel = busyAction === 'sign_in' ? 'Redirecting...' : 'Sign In With Google';
 
   return (
-    <div className="app-shell flex items-center justify-center px-4">
-      <div className="mobile-frame flex items-center justify-center">
+    <div className="app-shell flex items-start justify-center overflow-y-auto px-4 py-4 sm:items-center">
+      <div className="mobile-frame flex items-start justify-center sm:items-center">
         <section className="service-frame w-full max-w-2xl p-8">
           <div className="service-strip">
             <span className="service-label">UNSC identity uplink</span>
@@ -51,8 +52,21 @@ export function AuthScreen() {
                   </div>
                 </div>
               ) : null}
+              <div className="service-rule mt-6 pt-5">
+                <button
+                  type="button"
+                  onClick={() => void signInWithGoogle()}
+                  disabled={isSignInDisabled}
+                  className="focus-shell service-button-amber w-full rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.24em]"
+                >
+                  {signInLabel}
+                </button>
+              </div>
             </div>
-            <div className="service-art-panel min-h-[13rem]">
+            <div
+              className="service-art-panel pointer-events-none hidden min-h-[13rem] md:block"
+              aria-hidden="true"
+            >
               <div className="absolute inset-x-5 bottom-5 border border-[rgba(221,232,255,0.18)] bg-[rgba(3,8,15,0.62)] px-4 py-3 backdrop-blur-sm">
                 <p className="service-label">Deployment note</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
@@ -61,16 +75,6 @@ export function AuthScreen() {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="service-rule mt-8 pt-6">
-            <button
-              type="button"
-              onClick={() => void signInWithGoogle()}
-              disabled={isSignInDisabled}
-              className="focus-shell service-button-amber w-full rounded-none px-4 py-3 font-display text-sm font-semibold uppercase tracking-[0.24em]"
-            >
-              {busyAction === 'sign_in' ? 'Redirecting...' : 'Sign In With Google'}
-            </button>
           </div>
         </section>
       </div>

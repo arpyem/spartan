@@ -30,6 +30,7 @@ import { getBaseXP, isDoubleXPWeekend } from '@/lib/xp';
 
 export interface AppRuntime {
   getRedirectResult: () => Promise<AppUser | null>;
+  getCurrentUser: () => AppUser | null;
   onAuthStateChanged: (listener: (user: AppUser | null) => void) => () => void;
   signInWithGoogle: () => Promise<AppUser | null>;
   signOut: () => Promise<void>;
@@ -47,6 +48,25 @@ export interface AppRuntime {
   logWorkout: (input: LogWorkoutInput) => Promise<LogWorkoutResult>;
   advanceTour: (input: AdvanceTourInput) => Promise<AdvanceTourResult>;
   getDoubleXPStatusOverride: () => DoubleXPStatus | null;
+}
+
+export function shouldUseRedirectSignIn(options?: {
+  hasWindow?: boolean;
+  userAgent?: string;
+  coarsePointer?: boolean;
+}): boolean {
+  const hasWindow = options?.hasWindow ?? typeof window !== 'undefined';
+
+  if (!hasWindow) {
+    return true;
+  }
+
+  const userAgent = (options?.userAgent ?? navigator.userAgent ?? '').toLowerCase();
+  const coarsePointer = options?.coarsePointer
+    ?? (typeof window.matchMedia === 'function'
+      && window.matchMedia('(pointer: coarse)').matches);
+
+  return coarsePointer || /android|iphone|ipad|ipod|mobile/.test(userAgent);
 }
 
 function toAppUser(user: FirebaseUser | null | undefined): AppUser | null {
@@ -68,6 +88,10 @@ const productionRuntime: AppRuntime = {
     const result = await getRedirectResult(auth);
     return toAppUser(result?.user);
   },
+  getCurrentUser() {
+    const { auth } = getFirebaseServices();
+    return toAppUser(auth.currentUser);
+  },
   onAuthStateChanged(listener) {
     const { auth } = getFirebaseServices();
     return onAuthStateChanged(auth, (user) => {
@@ -77,7 +101,7 @@ const productionRuntime: AppRuntime = {
   async signInWithGoogle() {
     const { auth, googleProvider } = getFirebaseServices();
 
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV || !shouldUseRedirectSignIn()) {
       const result = await signInWithPopup(auth, googleProvider);
       return toAppUser(result.user);
     }
@@ -208,6 +232,10 @@ class E2EMockRuntime implements AppRuntime {
     this.redirectResultConsumed = true;
     const result = this.getScenario().auth?.redirectResult ?? null;
     return result ? cloneValue(result) : null;
+  }
+
+  getCurrentUser() {
+    return this.currentUser ? cloneValue(this.currentUser) : null;
   }
 
   onAuthStateChanged(listener: (user: AppUser | null) => void) {

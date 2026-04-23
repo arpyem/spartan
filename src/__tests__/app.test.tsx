@@ -28,6 +28,7 @@ import {
   setAuthActionError,
   setAuthBootstrapMode,
   setInitialAuthState,
+  setRedirectResult,
   setSetDocError,
   setDocMock,
   signInWithPopupMock,
@@ -37,6 +38,7 @@ import {
   writeBatchMock,
 } from '@/__tests__/mocks/firebase';
 import type { DoubleXPStatus } from '@/lib/types';
+import { shouldUseRedirectSignIn } from '@/lib/runtime';
 
 let currentDoubleXpStatus: DoubleXPStatus = { active: false, upcoming: false };
 
@@ -166,6 +168,28 @@ describe('Plan 03 app flow', () => {
     expect(getAuthActionCalls().signInWithPopup).toBe(1);
   });
 
+  it('prefers popup sign-in on desktop-class browsers', () => {
+    expect(
+      shouldUseRedirectSignIn({
+        hasWindow: true,
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/135.0.0.0 Safari/537.36',
+        coarsePointer: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('keeps redirect sign-in for mobile-class browsers', () => {
+    expect(
+      shouldUseRedirectSignIn({
+        hasWindow: true,
+        userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 Version/18.3 Mobile/15E148 Safari/604.1',
+        coarsePointer: true,
+      }),
+    ).toBe(true);
+  });
+
   it('disables Google sign-in while offline', async () => {
     setInitialAuthState(null);
     setOnlineState(false);
@@ -188,6 +212,51 @@ describe('Plan 03 app flow', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/redirect failed/i);
     await user.click(screen.getByRole('button', { name: /Dismiss/i }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('promotes a successful redirect result even when the auth observer is delayed', async () => {
+    const userModel = createMockUser({ uid: 'redirect-bootstrap-ui' });
+    setInitialAuthState(null);
+    setAuthBootstrapMode('deferred');
+    setRedirectResult(userModel);
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }, { timeout: 5000 }),
+    ).toBeInTheDocument();
+  });
+
+  it('recovers from a delayed auth observer using the current Firebase user', async () => {
+    const userModel = createMockUser({ uid: 'current-user-recovery' });
+    setInitialAuthState(userModel);
+    setAuthBootstrapMode('deferred');
+    seedCollection(`users/${userModel.uid}/workouts`, []);
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }, { timeout: 5000 }),
+    ).toBeInTheDocument();
+  });
+
+  it('escapes the boot screen with an actionable auth timeout message when Firebase never settles', async () => {
+    vi.useFakeTimers();
+    setInitialAuthState(null);
+    setAuthBootstrapMode('deferred');
+    const { default: App } = await import('@/App');
+
+    render(<App />);
+
+    await act(async () => {
+      vi.advanceTimersByTime(6000);
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Firebase auth took too long to initialize/i);
+    expect(screen.getByText(/Spartan ID Required/i)).toBeInTheDocument();
   });
 
   it('surfaces sign-in failures without leaving the auth screen', async () => {
@@ -325,7 +394,9 @@ describe('Plan 03 app flow', () => {
       emitAuthState(user);
     });
 
-    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }),
+    ).toBeInTheDocument();
   });
 
   it('updates the home screen when realtime user data changes after mount', async () => {
@@ -372,7 +443,7 @@ describe('Plan 03 app flow', () => {
       emitSnapshotError(`users/${userModel.uid}`, new Error('listener failed'));
     });
 
-    expect(screen.getByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open service record/i })).toBeInTheDocument();
     expect(screen.getByText(/Live sync paused/i)).toBeInTheDocument();
   });
 
@@ -383,7 +454,9 @@ describe('Plan 03 app flow', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }),
+    ).toBeInTheDocument();
 
     await act(async () => {
       setOnlineState(false);
@@ -421,7 +494,9 @@ describe('Plan 03 app flow', () => {
     expect(screen.getByText(/Cardio advanced from Recruit/i)).toBeInTheDocument();
     expect(getCommittedBatches()).toHaveLength(1);
     await user.click(screen.getByRole('heading', { name: /^Apprentice$/i }));
-    expect(await screen.findByRole('heading', { name: /Service Record/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Open service record/i }),
+    ).toBeInTheDocument();
   });
 
   it('stores workout notes from the free-text field on submit', async () => {

@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { gotoApp } from './helpers';
 
 test('renders the signed-out shell and signs in without leaving the app in mock mode', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+
   await gotoApp(page, '/', {
     auth: {
       status: 'signed_out',
