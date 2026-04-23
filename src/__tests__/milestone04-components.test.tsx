@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GlobalRank } from '@/components/GlobalRank';
 import { InfoModal } from '@/components/InfoModal';
@@ -27,9 +27,9 @@ const tourAdvanceEvent: TourAdvanceEvent = {
   track: 'cardio',
   trackLabel: 'Cardio',
   previousTour: 1,
-  previousTourLabel: 'Tour 1',
+  previousTourLabel: 'Base Tour',
   nextTour: 2,
-  nextTourLabel: 'Tour 2',
+  nextTourLabel: 'Bronze Tour',
   previousRankId: 41,
   previousRankName: '5-Star General',
   nextRankId: 0,
@@ -89,11 +89,13 @@ describe('Milestone 04 components', () => {
     const { rerender, container } = render(<RankEmblem rankId={7} tour={1} size={72} />);
 
     expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-shield', 'off');
+    expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-tour-material', 'none');
     expect(container.querySelector('text')).toBeNull();
 
-    rerender(<RankEmblem rankId={7} tour={5} size={72} />);
+    rerender(<RankEmblem rankId={7} tour={6} size={72} />);
 
     expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-shield', 'on');
+    expect(screen.getByTestId('rank-emblem')).toHaveAttribute('data-tour-material', 'diamond');
     expect(container.querySelector('text')).toBeNull();
   });
 
@@ -152,7 +154,7 @@ describe('Milestone 04 components', () => {
     );
 
     expect(screen.getByText(/^Pull$/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Tour 2/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bronze Tour/i)).not.toBeInTheDocument();
     expect(screen.getByText(/^Recruit$/i)).toBeInTheDocument();
   });
 
@@ -239,13 +241,68 @@ describe('Milestone 04 components', () => {
     expect(trigger).toHaveFocus();
   });
 
+  it('renders the service record as a single-scroll sheet with the full rank table in flow', async () => {
+    const user = userEvent.setup();
+    const longUserDoc: UserDoc = {
+      ...userDoc,
+      displayName: 'Master Chief Petty Officer John-117',
+      email: 'master.chief.petty.officer.john.117@example.com',
+    };
+
+    function Harness() {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open record
+          </button>
+          <InfoModal
+            isOpen={isOpen}
+            user={longUserDoc}
+            tracks={longUserDoc.tracks}
+            stats={workoutStats}
+            doubleXPStatus={{ active: false, upcoming: false }}
+            globalRankId={0}
+            onClose={() => setIsOpen(false)}
+            onSignOut={() => {}}
+          />
+        </>
+      );
+    }
+
+    render(<Harness />);
+
+    await user.click(screen.getByRole('button', { name: /Open record/i }));
+
+    const dialog = await screen.findByRole('dialog', { name: /Service Record/i });
+    const header = screen.getByTestId('service-record-header');
+    const scrollSurface = screen.getByTestId('service-record-scroll');
+    const rankTable = screen.getByTestId('service-record-rank-table');
+    const rankTableScroll = screen.getByTestId('service-record-rank-table-scroll');
+    const tourTable = screen.getByTestId('service-record-tour-table');
+    const tourTableScroll = screen.getByTestId('service-record-tour-table-scroll');
+
+    expect(dialog).toContainElement(header);
+    expect(scrollSurface).toContainElement(rankTable);
+    expect(scrollSurface).toContainElement(tourTable);
+    expect(document.querySelector('.service-art-panel')).toBeNull();
+    expect(within(rankTable).getByText(/Current global rank/i)).toBeInTheDocument();
+    expect(within(rankTable).getByText(/5-Star General/i)).toBeInTheDocument();
+    expect(within(tourTable).getByText(/^Base Tour$/i)).toBeInTheDocument();
+    expect(within(tourTable).getByText(/^Diamond Tour$/i)).toBeInTheDocument();
+    expect(rankTable.querySelector('[aria-current="true"]')).toHaveTextContent(/Recruit/i);
+    expect(rankTableScroll).toHaveClass('h-[400px]');
+    expect(tourTableScroll).toHaveClass('h-[400px]');
+  });
+
   it('keeps Tour celebration locked until the ceremony completes', async () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     const onClose = vi.fn();
     const { container } = render(<TourModal event={tourAdvanceEvent} onClose={onClose} />);
 
-    expect(screen.getByRole('dialog', { name: /Tour 2/i })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /Bronze Tour/i })).toBeInTheDocument();
     expect(screen.getByText(/Ceremony in progress/i)).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
@@ -275,4 +332,19 @@ describe('Milestone 04 components', () => {
     fireEvent.click(container.firstChild as HTMLElement);
     expect(onClose).toHaveBeenCalledTimes(1);
   }, 4000);
+
+  it('renders the diamond shield material hook for Tour 6 compositions', () => {
+    const diamondEvent: TourAdvanceEvent = {
+      ...tourAdvanceEvent,
+      previousTour: 5,
+      previousTourLabel: 'Platinum Tour',
+      nextTour: 6,
+      nextTourLabel: 'Diamond Tour',
+    };
+
+    const { container } = render(<TourModal event={diamondEvent} onClose={() => {}} />);
+
+    expect(screen.getByRole('dialog', { name: /Diamond Tour/i })).toBeInTheDocument();
+    expect(container.querySelector('[data-tour-shield] [data-tour-material="diamond"]')).toBeTruthy();
+  });
 });

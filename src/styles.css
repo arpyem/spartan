@@ -252,6 +252,16 @@ a {
   background: linear-gradient(180deg, rgba(3, 7, 13, 0.82), rgba(7, 11, 18, 0.74));
 }
 
+.service-strip-record {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 0.65rem 0.85rem 0.8rem;
+}
+
+.service-strip-record .service-label {
+  line-height: 1.2;
+}
+
 .service-rule {
   border-top: 1px solid var(--color-divider);
 }
@@ -595,44 +605,49 @@ a {
   color: var(--color-text-muted);
 }
 
-.service-art-panel {
+.service-rank-table-current {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  isolation: isolate;
+  border-bottom: 1px solid var(--color-divider);
+  background:
+    linear-gradient(180deg, rgba(13, 27, 50, 0.995), rgba(8, 18, 34, 0.985)),
+    linear-gradient(90deg, rgba(217, 134, 59, 0.1), transparent 24%);
+  padding: 0.9rem 1rem;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 10px 18px rgba(2, 6, 12, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.service-rank-row {
   position: relative;
+  z-index: 0;
+  isolation: isolate;
   overflow: hidden;
-  min-height: 16rem;
-  border: 1px solid rgba(215, 228, 252, 0.22);
-  background:
-    radial-gradient(circle at 60% 18%, rgba(142, 166, 210, 0.45), transparent 20%),
-    radial-gradient(circle at 38% 52%, rgba(69, 94, 144, 0.6), transparent 26%),
-    linear-gradient(180deg, rgba(13, 24, 48, 0.88), rgba(5, 10, 20, 0.96));
+  background: linear-gradient(180deg, rgba(6, 14, 27, 0.72), rgba(6, 12, 22, 0.52));
 }
 
-.service-art-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
+.service-rank-row[aria-current="true"] {
   background:
-    linear-gradient(
-      130deg,
-      transparent 0 45%,
-      rgba(229, 145, 68, 0.55) 45% 54%,
-      transparent 54% 100%
-    ),
-    radial-gradient(circle at 66% 24%, rgba(255, 255, 255, 0.18), transparent 10%);
-  opacity: 0.6;
+    linear-gradient(90deg, rgba(217, 134, 59, 0.22), transparent 18%),
+    linear-gradient(180deg, rgba(11, 22, 40, 0.92), rgba(7, 16, 31, 0.9));
+  box-shadow: inset 0 0 0 1px rgba(255, 212, 173, 0.08);
 }
 
-.service-art-panel::after {
-  content: "";
-  position: absolute;
-  inset: auto 12% -10% auto;
-  width: 60%;
-  height: 95%;
+.service-table-preview {
+  display: flex;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(214, 225, 244, 0.18);
   background:
-    linear-gradient(180deg, rgba(229, 235, 245, 0.98), rgba(93, 106, 130, 0.98)),
-    linear-gradient(180deg, rgba(255, 186, 73, 0.88), rgba(255, 140, 0, 0.88));
-  clip-path: polygon(28% 0, 63% 3%, 80% 16%, 86% 35%, 81% 57%, 74% 86%, 61% 100%, 30% 100%, 12% 78%, 8% 48%, 13% 20%);
-  filter: drop-shadow(-1.2rem 1rem 1rem rgba(0, 0, 0, 0.32));
-  opacity: 0.72;
+    linear-gradient(180deg, rgba(7, 16, 31, 0.92), rgba(5, 11, 21, 0.94)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .service-selection-glow {
@@ -689,6 +704,10 @@ a {
     padding: 0.35rem 0.65rem;
   }
 
+  .service-strip-record {
+    padding: 0.55rem 0.65rem 0.7rem;
+  }
+
   .service-home-strip-record {
     min-width: 9.4rem;
   }
@@ -716,6 +735,10 @@ a {
   .service-subtitle {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
+  }
+
+  .service-rank-table-current {
+    padding: 0.8rem 0.9rem;
   }
 
   .service-track-card {
